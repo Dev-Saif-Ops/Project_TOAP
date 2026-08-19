@@ -1,0 +1,28 @@
+# Environment
+.env
+.env.local
+
+# Python
+.pytest_cache/
+.coverage
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Benchmark results (keep structure, ignore data)
+toap-bench/results/*.json
+toap-bench/results/*.csv
+!toap-bench/results/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
