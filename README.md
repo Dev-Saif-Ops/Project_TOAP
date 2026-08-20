@@ -1,8 +1,9 @@
 # TOAP — Token-Optimized Agent Protocol
 
-> **Initial Release (v0.1.0-alpha)** — Built and tested on **Gemini**. Needs community validation on **OpenAI (GPT-4o)** and **Anthropic (Claude 3.5)**.
+> **v0.1.1-alpha** — Gemini-validated. **Pilot Insert Kit** in progress (meter + schema + plain insert).  
+> Not production-ready. Cross-model (GPT/Claude) not run (no budget). Community self-pay benches are optional, not the primary validation path.
 
-Middleware that compresses AI agent communication into a deterministic DSL — reducing verbose JSON token costs without migrating off LangChain or CrewAI.
+Middleware that compresses the *serialized representation* of AI agent tool calls into a compact DSL, then expands via a proxy before tools run.
 
 ---
 
@@ -20,15 +21,20 @@ Instead of:
 {"thought": "...", "action": "query_database", "params": {"query": "...", "limit": 5}}
 ```
 
+**Honest status:** LangChain/CrewAI demos exist (greenfield). Drop-in into an *existing* production agent is what the Pilot Insert Kit is building — see `PARTNER_INSERT.md`.
+
 ---
 
 ## What's included
 
 | Component | Path | Description |
 |---|---|---|
-| **SDK** | `toap-python/` | Parser, proxy middleware, CLI, LangChain/CrewAI adapters |
-| **Benchmark** | `toap-bench/` | Automated harness to test model compliance + token savings |
-| **Docs** | `prd.md`, `plan.md`, `memory.md` | Product spec and decisions |
+| **SDK** | `toap-python/` | Parser, proxy, meter, schema gate, encoder, CLI, adapters |
+| **Pilot path** | `examples/pilot_plain_gemini.py` | Offline/live A/B + CSV/JSON meter export |
+| **Partner playbook** | `PARTNER_INSERT.md` | How to embed + measure without stranger $3–5 benches |
+| **Decisions / flow** | `decisions.md`, `EXECUTION_FLOW.md`, `critiques/` | Why + how + Critique gate |
+| **Benchmark** | `toap-bench/` | Synthetic Gemini Tier-1 harness |
+| **Docs** | `prd.md`, `plan.md`, `memory.md`, `agents.md` | Spec + agent workflow |
 
 ---
 
@@ -37,15 +43,17 @@ Instead of:
 ```bash
 # 1. Install SDK
 cd toap-python
-pip install -e ".[langchain-gemini,crewai-gemini]"
+pip install -e .
 
-# 2. Try the quickstart
+# 2. Offline pilot (no API cost) — meter A/B CSV
+python examples/pilot_plain_gemini.py
+
+# 3. Quickstart (parse + proxy + meter)
 python examples/quickstart.py
 
-# 3. Run LangChain live agent (needs GEMINI_API_KEY)
+# 4. Optional live Gemini / framework demos (needs GEMINI_API_KEY)
+pip install -e ".[langchain-gemini,crewai-gemini]"
 python examples/langchain_agent.py
-
-# 4. Run CrewAI live agent (needs GEMINI_API_KEY)
 python examples/crewai_agent.py
 ```
 

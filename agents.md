@@ -1,6 +1,37 @@
 # TOAP — Agent Roles & Development Workflow
 
-> Defines AI agent personas used during TOAP development. Each agent has a focused scope to prevent context drift and ensure quality gates are respected.
+> Agent personas + **Critique gate** + **quiz-before-accept**.  
+> **No major cycle is ACCEPTED until Critique Agent = PASS and human quiz = PASS.**
+
+---
+
+## Hard gates (non-negotiable)
+
+```
+Implementation cycle
+        │
+        ▼
+Critique Agent  ──FAIL──► REWORK (do not quiz, do not accept)
+        │
+       PASS
+        │
+        ▼
+Architect quizzes human ──FAIL──► REWORK / re-teach
+        │
+       PASS
+        │
+        ▼
+EXECUTION_FLOW.md → Acceptance: ACCEPTED
+```
+
+| Gate | Owner | Block on fail |
+|---|---|---|
+| **Critique PASS** | Critique Agent | Yes — always |
+| **Human quiz PASS** | Architect + human | Yes — major cycles |
+| Unit tests green | Integration / Parser | Yes — before critique can PASS |
+
+Minor typo/docs-only: Critique may be `N/A (docs-only)` with Architect sign-off.  
+Anything touching `proxy`, `parser`, `meter`, `schema`, `encoder`, `compare`, adapters, CLI, or public API: **full Critique required**.
 
 ---
 
@@ -8,164 +39,135 @@
 
 ### 1. Architect Agent
 
-**Role:** Senior product architect + engineering lead  
-**Scope:** Architecture decisions, PRD updates, go/no-go gates, risk assessment  
-**Invoked when:** Starting a new phase, reviewing benchmark results, pivot decisions  
-
+**Role:** Product architect + engineering lead  
+**Scope:** Gates, scope cuts, `memory.md`, `decisions.md`, pilot vs sell  
 **Rules:**
-- Never approve Phase 1+ work until Phase 0 gates pass
-- Always challenge compression claims with data
-- Hero differentiator = proxy architecture, not syntax
-- Flag scope creep into Phase 2/3 during Phase 0/1
+- Gemini-only live until budget exists
+- No Phase 2 gateway until insert kit + ≥1 dry-run
+- Challenge savings claims with net vs output honesty
+- Hero = proxy, not syntax
+- **Must not mark ACCEPTED without Critique PASS**
 
-**Outputs:** PRD updates, architecture diagrams, gate verdicts, memory.md decisions
+**Outputs:** verdicts, scope locks, human quiz
 
 ---
 
 ### 2. Parser Agent
 
-**Role:** Language engineer — grammar spec + lexer/parser implementation  
-**Scope:** `toap-bench/parser/`, `toap-bench/grammar/`, `toap-bench/tests/test_lexer.py`  
-**Invoked when:** Grammar changes, parser bugs, new syntax features  
-
-**Rules:**
-- Grammar spec is frozen during benchmark runs — no changes mid-test
-- 100% unit test coverage on synthetic strings
-- Strict validation only — no fuzzy matching in v1
-- Parser latency target: < 5ms per string
-
-**Outputs:** `lexer.py`, grammar spec, parser unit tests
+**Role:** Grammar + lexer/parser  
+**Scope:** `toap-python/src/toap/parser.py`, grammar docs, lexer tests  
+**Rules:** Grammar frozen during benches; strict validation; aliases in `decisions.md`
 
 ---
 
 ### 3. Benchmark Agent
 
-**Role:** Test engineer — harness, adapters, runner, reporting  
-**Scope:** `toap-bench/tasks/`, `toap-bench/prompts/`, `toap-bench/adapters/`, `toap-bench/runner/`  
-**Invoked when:** Running tests, adding test cases, analyzing results  
-
-**Rules:**
-- Every result row includes: grammar hash, model, condition, seed, timestamp
-- Run Tier 1 first — fast fail if compliance is dead
-- Never skip JSON baseline comparison
-- Report must include go/no-go verdict against G1–G4 gates
-- Budget cap: $100 per full benchmark run
-
-**Outputs:** Test cases, prompt templates, benchmark reports, go/no-go verdict
+**Role:** Harness + reporting  
+**Scope:** `toap-bench/`  
+**Rules:** Tier 1 first; no cherry-picking; do not depend on stranger $3–5 spends
 
 ---
 
 ### 4. Integration Agent
 
-**Role:** Framework adapter developer  
-**Scope:** LangChain/CrewAI plugins (Phase 1 only)  
-**Invoked when:** Phase 0 gates pass, SDK work begins  
-
+**Role:** Insert kit + adapters  
+**Scope:** `proxy`, `meter`, `schema`, `encoder`, `compare`, adapters, `PARTNER_INSERT.md`  
 **Rules:**
-- **Blocked until G1 passes** — do not write adapters before benchmark validation
-- Loose coupling — zero framework imports in core parser
-- Adapter must work with latest stable release, not bleeding edge
-- Each adapter gets its own integration test suite
-
-**Outputs:** `toap-langchain` plugin, `toap-crewai` plugin
+- Core framework-free; default pilot = plain Python + Gemini
+- Always wire Meter into live paths
+- Submit work to Critique before asking for accept
 
 ---
 
 ### 5. DevOps Agent
 
-**Role:** Infrastructure engineer — gateway, deployment, hardening  
-**Scope:** Phase 2 API Gateway (blocked until Phase 1 adoption)  
-**Invoked when:** Phase 2 begins, server setup, CI/CD  
-
-**Rules:**
-- Phase 2 is a separate product — own budget and SLA
-- Zero-downtime deployment required
-- Security hardening non-negotiable (SSH, fail2ban, rate limiting)
-- Proxy overhead target: < 50ms
-
-**Outputs:** Gateway service, Docker configs, CI/CD pipelines, runbooks
+**Role:** Gateway / deploy — **BLOCKED** until Architect unblocks after pilot proof
 
 ---
 
 ### 6. Dev-Experience Agent
 
-**Role:** Developer tools — CLI, pretty-printer, docs  
-**Scope:** `toap-cli`, README, quickstart guides  
-**Invoked when:** Phase 1 begins, developer feedback received  
+**Role:** CLI, examples, docs  
+**Rules:** CLI decodes every TOAP string; examples show meter output
+
+---
+
+### 7. Critique Agent (HARD GATE)
+
+**Role:** Adversarial reviewer — assumes the change is oversold until proven otherwise  
+**Scope:** Entire cycle: code, docs, claims, tests, security, scope creep  
+**Invoked when:** Any major implementation cycle is proposed as “done”
+
+**Must check (all applicable):**
+
+| Check ID | Question | Fail if |
+|---|---|---|
+| C1 Honesty | Do README/memory/partner docs overclaim savings or “drop-in”? | Inflated claims |
+| C2 Scope | Did we build gateway/PyPI/sales fluff instead of insert kit? | Scope creep |
+| C3 Safety | Can valid-but-wrong args still execute when schema registered? | Schema bypass |
+| C4 Meter | Is measurement real (exportable) or theater? | No JSON/CSV path |
+| C5 Deps | Did core gain heavy required dependencies without decision? | Undocumented deps |
+| C6 Tests | Do new paths have failing-risk coverage (schema, fuzz, replay)? | Untested critical path |
+| C7 Flow docs | Is `EXECUTION_FLOW.md` / `decisions.md` updated this cycle? | Missing trail |
+| C8 Budget | Does anything require OpenAI/Claude spend as mandatory? | Breaks Gemini-only lock |
+| C9 Fallback | Parse/schema failure policy clear (no silent wrong tool)? | Silent failure |
+| C10 Reversibility | Can we state what was *not* done? | Kitchen-sink PR |
+
+**Verdict format (required in `critiques/`):**
+
+```
+[Agent: Critique] Cycle <id>
+C1..C10: PASS|FAIL|N/A — <one line each>
+VERDICT: PASS | FAIL
+BLOCKERS: <list or none>
+REWORK: <exact fixes required if FAIL>
+```
 
 **Rules:**
-- Dev-mode pretty-printer is Phase 1 P0 — not optional
-- Quickstart must be < 5 minutes to first working integration
-- Every TOAP string must be human-decodable via CLI
+- Critique Agent **cannot** grade its own implementation (Integration must not self-PASS)
+- FAIL means Architect must not run accept quiz until REWORK done and Critique re-run
+- PASS is provisional until unit tests are green in the same cycle
+- Write report to `critiques/<cycle-id>.md`
 
-**Outputs:** `toap-cli --pretty`, quickstart docs, integration examples
+**Outputs:** `critiques/<cycle-id>.md` with PASS/FAIL
 
 ---
 
-## Workflow: Phase 0 (Current)
+## Active workflow: Pilot Insert Kit
 
 ```
-Architect Agent
-    │
-    ├── defines gates & test plan (prd.md, plan.md)
-    │
-    ▼
-Parser Agent ──→ grammar spec + lexer + unit tests
-    │
-    ▼
-Benchmark Agent ──→ test cases + prompts + adapters + runner
-    │
-    ▼
-Benchmark Agent ──→ RUN benchmark (Tier 1 first)
-    │
-    ▼
-Architect Agent ──→ review results → GO / NO-GO verdict
-    │
-    ├── GO  → Integration Agent + Dev-Experience Agent (Phase 1)
-    └── NO-GO → Architect Agent documents pivot options
+Architect  → locks Gemini-only + insert kit scope (decisions.md)
+     │
+     ▼
+Integration → P1 Meter → P2 Schema → P3 Encoder/Compare/Pilot
+     │                      → P4 Replay → P5 Playbook
+     ▼
+Dev-Experience → wire examples + CLI
+     │
+     ▼
+Critique Agent → PASS / FAIL (+ critiques/*.md)
+     │
+    PASS only
+     ▼
+Architect → quiz human → PASS / FAIL
+     │
+    both PASS
+     ▼
+Acceptance: ACCEPTED in EXECUTION_FLOW.md
 ```
 
 ---
 
-## Handoff Rules
-
-| From | To | Trigger | Blocked Until |
-|---|---|---|---|
-| Architect | Parser | Plan approved | — |
-| Parser | Benchmark | Parser tests pass | Parser 100% unit test pass |
-| Benchmark | Architect | Tier 1 results ready | Tier 1 complete |
-| Architect | Integration | GO verdict | G1–G4 all pass |
-| Integration | DevOps | SDK published + adoption | ≥ 3 design partners |
-| Any | DevOps | Phase 2 scoping | Phase 1 complete |
-
----
-
-## Quality Gates (Agent-Enforced)
-
-| Gate | Owner | Check |
-|---|---|---|
-| Grammar frozen | Parser Agent | No spec changes during benchmark |
-| Parser correct | Parser Agent | 100% unit test pass |
-| Benchmark fair | Benchmark Agent | Same tasks for TOAP and JSON baseline |
-| Results honest | Benchmark Agent | Raw data published, no cherry-picking |
-| Go/no-go | Architect Agent | G1–G4 criteria applied strictly |
-| No premature SDK | Integration Agent | Self-blocked until GO verdict |
-
----
-
-## Communication Protocol
-
-When switching agent roles mid-session, state:
+## Communication protocol
 
 ```
 [Agent: <name>] <action>
 ```
 
-Example:
+Examples:
 ```
-[Agent: Parser] Grammar spec v0.1 frozen. 24 unit tests passing.
-[Agent: Benchmark] Tier 1 run complete. GPT-4o few-shot-2: 88% compliance.
-[Agent: Architect] G1 MARGINAL PASS (88% vs 90% target). Recommend 5-shot retest before GO.
+[Agent: Integration] Pilot kit modules landed. Submitting to Critique.
+[Agent: Critique] Cycle pilot-kit-2026-08-20 VERDICT: FAIL. Blocker: C3 schema not wired.
+[Agent: Critique] Cycle pilot-kit-2026-08-20 VERDICT: PASS. Tests green. Quiz may proceed.
+[Agent: Architect] Quiz ready — accept only if human passes.
 ```
-
-This keeps context clear in multi-step development sessions.

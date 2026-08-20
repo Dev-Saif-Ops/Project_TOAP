@@ -1,53 +1,85 @@
-# TOAP — Token-Optimized Agent Protocol
+# TOAP — Project Memory
 
-**Version:** 0.1.0-alpha  
-**Status:** Initial release — Gemini validated, community testing needed
+**Version:** 0.1.1-alpha (Pilot Insert Kit track)  
+**Status:** Gemini-only live validation. Building insert + measure capability. Not sell-ready.
 
 ---
 
-## Project Status
+## Current mission (locked)
 
-| Field | Value |
-|---|---|
-| **Release** | v0.1.0-alpha (August 2026) |
-| **Validated on** | Gemini 3.5 Flash Lite only |
-| **Needs testing** | GPT-4o, Claude 3.5 Sonnet |
-| **Phase** | Phase 1 alpha — open-source seed |
+Replace the failed community ask (“clone + pay $3–5 + self-integrate”) with a **Pilot Insert Kit**:
 
-## Core Bet (Partially Validated)
+1. Meter real runs (tokens, estimated $, success/fail)
+2. Schema gate before tool execute
+3. Plain Python + Gemini insert path + A/B compare
+4. Partner playbook: we insert, they watch
 
-Models can emit valid TOAP syntax with few-shot prompting. **Confirmed on Gemini.** Pending on OpenAI/Claude.
+**Do not** spend on OpenAI/Claude until keys/budget exist. **Do not** push Phase 2 gateway or sales campaigns as the next step.
 
-## Honest Metrics (Gemini, Tier 1, few-shot-2)
+---
+
+## Honest metrics (Gemini Tier 1, few-shot-2)
 
 | Metric | Value |
 |---|---|
 | Compliance | 100% |
-| Semantic accuracy | 93.8% (with arg aliases) |
+| Semantic accuracy | 93.8% (arg aliases) |
 | Output token savings | ~45% |
-| Net token savings | ~5-6% (prompt overhead dominates) |
+| Net token savings | ~5–6% (prompt overhead) |
 
-## Hero Differentiator
+Cross-model (GPT/Claude): **not run** (budget).
 
-Interceptor/proxy architecture — drop in middleware, keep your framework.
+---
 
-## Go/No-Go Gates
+## What exists vs what was missing
 
-| Gate | Gemini Result | Cross-model |
+| Capability | Status |
+|---|---|
+| Parser + aliases | Done |
+| Thin proxy | Done → extended with meter/schema/fallback |
+| Synthetic bench (Gemini) | Done |
+| LangChain/CrewAI demos | Done (greenfield only) |
+| Meter / $ report | Pilot Kit |
+| Schema fail-closed | Pilot Kit |
+| Plain insert + A/B | Pilot Kit |
+| Partner playbook | Pilot Kit |
+
+---
+
+## Constraints
+
+- Live LLM budget: **Gemini only**
+- Partner stack: **unknown** → default insert target = plain Python + Gemini
+- Community psychology: strangers will not pay to test our product
+
+---
+
+## Key docs
+
+| File | Role |
+|---|---|
+| `memory.md` | Where we stand (this file) |
+| `decisions.md` | Why each approach / library / scope cut |
+| `EXECUTION_FLOW.md` | Entry points, call graph, AI change log |
+| `agents.md` | Agent roles + **Critique PASS** + quiz-before-accept |
+| `critiques/` | Per-cycle Critique Agent PASS/FAIL reports |
+| `PARTNER_INSERT.md` | How to embed + measure with a builder |
+| `prd.md` / `plan.md` | Original product plan (historical) |
+
+---
+
+## Active phases (Pilot Insert Kit)
+
+| Phase | Goal | Status |
 |---|---|---|
-| G1 Compliance | PASS (100%) | Pending GPT/Claude |
-| G2 Accuracy | PASS (93.8%) | Pending GPT/Claude |
-| G3 Output savings | PASS (~45%) | Pending |
-| G3 Net savings | FAIL (~5.6%) | Pending |
+| P1 | Meter + RunReport | Done (Critique PASS; quiz pending) |
+| P2 | Schema gate + fallback | Done (`require_schema`) |
+| P3 | Encoder + compare + plain Gemini pilot | Done (offline verified) |
+| P4 | Replay/fuzz fixtures | Done |
+| P5 | Partner playbook | Done (`PARTNER_INSERT.md`) |
 
-## Current Focus
+---
 
-Community validation on OpenAI and Anthropic. See COMMUNITY_TEST.md.
+## Hero differentiator (unchanged)
 
-## Key Files
-
-- `README.md` — project overview
-- `COMMUNITY_TEST.md` — how to test on your model
-- `toap-bench/results/REPORT.md` — honest benchmark report
-- `toap-python/` — SDK package
-- `CHANGELOG.md` — release notes
+Interceptor/proxy architecture — not the unicode syntax itself.

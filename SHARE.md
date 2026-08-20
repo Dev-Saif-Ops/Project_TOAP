@@ -1,35 +1,44 @@
 # Share this in your community
 
-Copy-paste template:
+## A) Insert + measure offer (PRIMARY — use this)
+
+Copy-paste:
+
+---
+
+Hey — quick update on TOAP (token-optimized agent tool-call format).
+
+I am **not** asking you to spend $3–5 running my benchmark.
+
+What I need instead (30–60 min):
+1. You show me where your agent’s model text comes out before tools run
+2. I plug in a thin TOAP proxy + meter on that path (Gemini or your key)
+3. You get a CSV/JSON before/after style report
+
+Repo: https://github.com/Dev-Saif-Ops/Project_TOAP  
+Playbook: PARTNER_INSERT.md  
+
+Alpha / MIT. Honest about net vs output savings. Looking for 1–2 builders to sit with, not stars.
+
+DM me if you have an agent that already pays per token.
+
+---
+
+## B) Old self-serve bench ask (OPTIONAL only)
+
+Only if someone *wants* to run the harness themselves:
 
 ---
 
 **TOAP — Token-Optimized Agent Protocol (v0.1 alpha)**
 
-I built a middleware that compresses AI agent communication into a smaller syntax instead of verbose JSON — aimed at cutting LLM token costs in multi-agent pipelines.
+Middleware that compresses AI agent tool-call text vs verbose JSON.
 
-**What I tested:**
-- Gemini 3.5 Flash Lite
-- 100% TOAP format compliance (with 2 few-shot examples)
-- ~45% smaller output vs JSON (net savings lower due to prompt overhead — see report)
-- Works with LangChain + CrewAI live agents
+**Validated on:** Gemini (lab). GPT/Claude pending.
 
-**What I need from you:**
-Please run the benchmark on **GPT-4o** or **Claude 3.5 Sonnet** and share results back.
+**Optional self-test:** see COMMUNITY_TEST.md (~$3–5 if you use paid APIs).  
+Prefer the insert+measure offer above if you do not want to spend.
 
-**Quick test (10 min, ~$5 API cost):**
-```
-git clone <repo-url>
-cd project-toap/toap-bench
-pip install -r requirements.txt && pip install -e ../toap-python
-cp .env.example .env   # add your OPENAI or ANTHROPIC key
-python runner/benchmark.py --runs 5 --tier 1 --model gpt-4o --condition few_shot_2
-```
-
-Full instructions: see `COMMUNITY_TEST.md` in the repo.
-
-Repo includes: SDK, benchmark harness, LangChain/CrewAI examples, honest benchmark report.
-
-MIT licensed. Alpha — not production-ready yet.
+Repo: https://github.com/Dev-Saif-Ops/Project_TOAP
 
 ---

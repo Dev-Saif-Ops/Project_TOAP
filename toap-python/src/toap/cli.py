@@ -1,8 +1,9 @@
-"""TOAP CLI — dev-mode pretty printer and validator."""
+"""TOAP CLI — dev-mode pretty printer, validator, and meter report viewer."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -29,7 +30,6 @@ def cmd_validate(args: argparse.Namespace) -> int:
     checked = 0
     failed = 0
 
-    # Support multi-line TOAP blocks separated by blank lines
     blocks = [b.strip() for b in content.split("\n\n") if b.strip() and not b.strip().startswith("#")]
 
     for i, block in enumerate(blocks, 1):
@@ -49,6 +49,25 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    summary = data.get("summary") or {}
+    print(f"Model: {data.get('model', 'unknown')}")
+    print(f"Events: {summary.get('event_count', len(data.get('events', [])))}")
+    lanes = summary.get("lanes") or {}
+    for lane, stats in lanes.items():
+        print(f"\n[{lane}]")
+        print(f"  prompt_tokens:      {stats.get('prompt_tokens')}")
+        print(f"  completion_tokens:  {stats.get('completion_tokens')}")
+        print(f"  total_tokens:       {stats.get('total_tokens')}")
+        print(f"  estimated_cost_usd: {stats.get('estimated_cost_usd')}")
+        print(f"  intercept_ok_rate:  {stats.get('intercept_success_rate')}")
+    if summary.get("note"):
+        print(f"\nNote: {summary['note']}")
+    return 0
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="toap-cli", description="TOAP dev tools")
     sub = ap.add_subparsers(dest="command", required=True)
@@ -61,6 +80,10 @@ def main() -> None:
     validate = sub.add_parser("validate", help="Validate TOAP lines in a file")
     validate.add_argument("file", help="File with one TOAP output per line")
     validate.set_defaults(func=cmd_validate)
+
+    report = sub.add_parser("report", help="Print summary from a Meter JSON export")
+    report.add_argument("file", help="Path to meter report JSON")
+    report.set_defaults(func=cmd_report)
 
     args = ap.parse_args()
     sys.exit(args.func(args))

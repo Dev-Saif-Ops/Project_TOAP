@@ -1,0 +1,523 @@
+{
+  "model": "gemini",
+  "rates_usd_per_1m": {
+    "gemini-input": 0.1,
+    "gemini-output": 0.4,
+    "default-input": 0.1,
+    "default-output": 0.4
+  },
+  "summary": {
+    "model": "gemini",
+    "event_count": 34,
+    "lanes": {
+      "baseline": {
+        "prompt_tokens": 414,
+        "completion_tokens": 268,
+        "total_tokens": 682,
+        "estimated_cost_usd": 0.0001486,
+        "intercept_success_rate": 1.0
+      },
+      "toap": {
+        "prompt_tokens": 414,
+        "completion_tokens": 258,
+        "total_tokens": 672,
+        "estimated_cost_usd": 0.0001446,
+        "intercept_success_rate": 1.0
+      }
+    },
+    "note": "Token counts may be heuristic (len//4) unless provider counts were supplied."
+  },
+  "events": [
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 316,
+      "completion_tokens": 0,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "phase": "system_once"
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 316,
+      "completion_tokens": 0,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "phase": "system_once",
+        "model": "gemini-3.5-flash-lite"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 14,
+      "completion_tokens": 17,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 1,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 17,
+      "latency_ms": 0.0,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 1
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 14,
+      "completion_tokens": 17,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 1,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 17,
+      "latency_ms": 0.12700000661425292,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 7,
+      "completion_tokens": 14,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 2,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 14,
+      "latency_ms": 0.0,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 2
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 7,
+      "completion_tokens": 14,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 2,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 14,
+      "latency_ms": 0.05089998012408614,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 12,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 3,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": "WEB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 3
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 12,
+      "completion_tokens": 15,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 3,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 15,
+      "latency_ms": 0.04149999585933983,
+      "namespace": "WEB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 12,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 4,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 4
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 12,
+      "completion_tokens": 15,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 4,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 15,
+      "latency_ms": 0.04600000102072954,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 11,
+      "completion_tokens": 17,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 5,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 17,
+      "latency_ms": 0.0,
+      "namespace": "WEB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 5
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 11,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 5,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 16,
+      "latency_ms": 0.042100000428035855,
+      "namespace": "WEB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 13,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 6,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 16,
+      "latency_ms": 0.0,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 6
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 13,
+      "completion_tokens": 15,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 6,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 15,
+      "latency_ms": 0.04199999966658652,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 14,
+      "completion_tokens": 20,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 7,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 20,
+      "latency_ms": 0.0,
+      "namespace": "WEB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 7
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 14,
+      "completion_tokens": 19,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 7,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 19,
+      "latency_ms": 0.04370001261122525,
+      "namespace": "WEB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 15,
+      "completion_tokens": 18,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 8,
+        "mode": "synthetic_json_baseline"
+      }
+    },
+    {
+      "lane": "baseline",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 18,
+      "latency_ms": 0.0,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "hop": 8
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "llm",
+      "ok": true,
+      "prompt_tokens": 15,
+      "completion_tokens": 18,
+      "latency_ms": 0.0,
+      "namespace": null,
+      "error": null,
+      "meta": {
+        "hop": 8,
+        "model": "gemini-3.5-flash-lite",
+        "full_prompt_sent": true
+      }
+    },
+    {
+      "lane": "toap",
+      "kind": "intercept",
+      "ok": true,
+      "prompt_tokens": 0,
+      "completion_tokens": 18,
+      "latency_ms": 0.05810000584460795,
+      "namespace": "DB_SRC",
+      "error": null,
+      "meta": {
+        "schema_errors": [],
+        "execute": true,
+        "fallback": "error",
+        "require_schema": true
+      }
+    }
+  ]
+}
