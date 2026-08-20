@@ -21,7 +21,7 @@ Instead of:
 {"thought": "...", "action": "query_database", "params": {"query": "...", "limit": 5}}
 ```
 
-**Honest status:** LangChain/CrewAI demos exist (greenfield). Drop-in into an *existing* production agent is what the Pilot Insert Kit is building — see `PARTNER_INSERT.md`.
+**Honest status:** LangChain/CrewAI demos exist (greenfield). Drop-in into an *existing* production agent is still early; use the plain Gemini pilot example to measure locally.
 
 ---
 
@@ -31,7 +31,6 @@ Instead of:
 |---|---|---|
 | **SDK** | `toap-python/` | Parser, proxy, meter, schema gate, encoder, CLI, adapters |
 | **Pilot path** | `toap-python/examples/pilot_plain_gemini.py` | Offline/live multi-hop A/B + CSV/JSON meter export |
-| **Partner playbook** | `PARTNER_INSERT.md` | How to embed + measure without stranger $3–5 benches |
 | **Community test** | `COMMUNITY_TEST.md` | Optional self-serve harness steps |
 | **Benchmark** | `toap-bench/` | Synthetic Gemini Tier-1 harness + reports |
 
