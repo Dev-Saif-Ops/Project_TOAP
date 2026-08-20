@@ -11,7 +11,7 @@ from typing import Any
 
 
 # Overridable defaults (Gemini Flash-class ballpark, USD per 1M tokens).
-# Not billing-grade — see decisions.md D-006.
+# Not billing-grade — heuristic until provider token counts are supplied.
 DEFAULT_RATES_USD_PER_1M = {
     "gemini-input": 0.10,
     "gemini-output": 0.40,

@@ -2,7 +2,7 @@
 
 > Goal: embed TOAP + Meter into an existing agent path **without** asking the partner to spend $3–5 on our synthetic bench.
 
-Live LLM for our dry-runs: **Gemini only** (see `decisions.md`).
+Live LLM for our dry-runs: **Gemini only** (no OpenAI/Claude budget in current pilots).
 
 ---
 

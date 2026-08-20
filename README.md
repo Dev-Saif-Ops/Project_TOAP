@@ -30,11 +30,10 @@ Instead of:
 | Component | Path | Description |
 |---|---|---|
 | **SDK** | `toap-python/` | Parser, proxy, meter, schema gate, encoder, CLI, adapters |
-| **Pilot path** | `examples/pilot_plain_gemini.py` | Offline/live A/B + CSV/JSON meter export |
+| **Pilot path** | `toap-python/examples/pilot_plain_gemini.py` | Offline/live multi-hop A/B + CSV/JSON meter export |
 | **Partner playbook** | `PARTNER_INSERT.md` | How to embed + measure without stranger $3–5 benches |
-| **Decisions / flow** | `decisions.md`, `EXECUTION_FLOW.md`, `critiques/` | Why + how + Critique gate |
-| **Benchmark** | `toap-bench/` | Synthetic Gemini Tier-1 harness |
-| **Docs** | `prd.md`, `plan.md`, `memory.md`, `agents.md` | Spec + agent workflow |
+| **Community test** | `COMMUNITY_TEST.md` | Optional self-serve harness steps |
+| **Benchmark** | `toap-bench/` | Synthetic Gemini Tier-1 harness + reports |
 
 ---
 

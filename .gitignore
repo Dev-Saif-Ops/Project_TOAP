@@ -18,6 +18,19 @@ toap-bench/results/*.json
 toap-bench/results/*.csv
 !toap-bench/results/.gitkeep
 
+# Local working docs / pitch (not published to GitHub)
+memory.md
+agents.md
+AGENTS.md
+decisions.md
+prd.md
+plan.md
+SHARE.md
+EXECUTION_FLOW.md
+critiques/
+toap_architecture_strategy.pdf
+toap_executive_pitch.pdf
+
 # IDE
 .idea/
 .vscode/
