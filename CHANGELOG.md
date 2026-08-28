@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.2] - 2026-08-28
+
+Docs release: brings the PyPI page in sync with the repo.
+
+### Changed
+- Both READMEs gained a step-by-step "How to use" flow and an "Examples" section
+  listing all four example scripts, including the live Gemini agent
+  (`examples/live_gemini_agent.py`). Repo renamed to `toolwall`; all links updated.
+  No code changes; 85 tests unchanged.
+
 ## [0.2.1] - 2026-08-28
 
 Docs-only release to give the PyPI project page a proper landing description.

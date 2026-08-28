@@ -10,7 +10,7 @@
 > **Fail-closed firewall for AI agent tool calls.**
 > Structured outputs guarantee your agent's tool calls are *well-formed*. toolwall guarantees they're *allowed*.
 
-**Status: v0.2.1 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · Phase 0 + Phase 1 complete · 85 tests · published failure suite.**
+**Status: v0.2.2 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · Phase 0 + Phase 1 complete · 85 tests · published failure suite.**
 
 ```bash
 pip install toolwall
