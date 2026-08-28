@@ -1,110 +1,102 @@
-# TOAP — Token-Optimized Agent Protocol
+# TOAP — Token-Optimized Agent Protocol [ARCHIVED]
 
-> **v0.1.1-alpha** — Gemini-validated. **Pilot Insert Kit** in progress (meter + schema + plain insert).  
-> Not production-ready. Cross-model (GPT/Claude) not run (no budget). Community self-pay benches are optional, not the primary validation path.
-
-Middleware that compresses the *serialized representation* of AI agent tool calls into a compact DSL, then expands via a proxy before tools run.
+> **Discontinued 2026-08-28.** This branch is the permanent archive of TOAP v0.1.
+> The successor — **callgate**, a fail-closed firewall for agent tool calls — lives on [`main`](https://github.com/Dev-Saif-Ops/Project_TOAP/tree/main).
+>
+> This README is the honest postmortem: what we built, what the numbers really said, and why we stopped.
 
 ---
 
-## What is this?
+## What TOAP was
 
-When AI agents talk to each other, they use bloated JSON. TOAP replaces that with a compressed syntax:
+Middleware that compressed the serialized representation of AI agent tool calls into a compact DSL, expanded back through a proxy before tools ran:
 
 ```
 §T[sec_vuln_huawei_2026]
 ƒ(DB_SRC)>q:"Huawei Cloud vulnerabilities"|l:5
 ```
 
-Instead of:
+instead of
+
 ```json
 {"thought": "...", "action": "query_database", "params": {"query": "...", "limit": 5}}
 ```
 
-**Honest status:** LangChain/CrewAI demos exist (greenfield). Drop-in into an *existing* production agent is still early; use the plain Gemini pilot example to measure locally.
+The bet: smaller serialization → fewer tokens → lower cost for multi-agent pipelines.
 
 ---
 
-## What's included
+## What we built (all of it worked)
 
-| Component | Path | Description |
-|---|---|---|
-| **SDK** | `toap-python/` | Parser, proxy, meter, schema gate, encoder, CLI, adapters |
-| **Pilot path** | `toap-python/examples/pilot_plain_gemini.py` | Offline/live multi-hop A/B + CSV/JSON meter export |
-| **Community test** | `COMMUNITY_TEST.md` | Optional self-serve harness steps |
-| **Benchmark** | `toap-bench/` | Synthetic Gemini Tier-1 harness + reports |
-
----
-
-## Quick Start
-
-```bash
-# 1. Install SDK
-cd toap-python
-pip install -e .
-
-# 2. Offline pilot (no API cost) — meter A/B CSV
-python examples/pilot_plain_gemini.py
-
-# 3. Quickstart (parse + proxy + meter)
-python examples/quickstart.py
-
-# 4. Optional live Gemini / framework demos (needs GEMINI_API_KEY)
-pip install -e ".[langchain-gemini,crewai-gemini]"
-python examples/langchain_agent.py
-python examples/crewai_agent.py
-```
+- Strict lexer/parser with arg-alias normalization — 19 unit tests
+- Fail-closed interceptor/proxy (`parse → validate schema → dispatch tool`)
+- Schema gate: valid-but-wrong args blocked **before** `tool(**args)`
+- Meter: per-event token/cost accounting with JSON/CSV export
+- JSON↔TOAP encoder, A/B compare, dev CLI
+- LangChain + CrewAI live demos (greenfield)
+- Synthetic benchmark harness (22 tasks, 4 tiers) + multi-hop Gemini pilot
+- 25 tests passing at archive time
 
 ---
 
-## Gemini Test Results (by author)
+## What the numbers said
 
-Tested on **Gemini 3.5 Flash Lite** with few-shot prompting (2 examples):
+**Our own benchmark (Gemini 3.5 Flash Lite, Tier 1, few-shot-2, 16 calls):**
 
 | Metric | Result |
 |---|---|
-| TOAP format compliance | **100%** (16/16 runs, Tier 1) |
-| Tool execution accuracy | **93.8%** (with arg alias normalization) |
-| Output token savings vs JSON | **~45%** (output only) |
-| Net token savings (incl. prompt) | **~5-6%** (few-shot prompt is ~400 tokens) |
+| TOAP format compliance | 100% |
+| Semantic accuracy | 93.8% |
+| Output token savings vs JSON baseline | ~45% |
+| Net savings incl. prompt overhead | ~5–6% |
 
-Full details: [`toap-bench/results/REPORT.md`](toap-bench/results/REPORT.md)
+**Independent re-audit (2026-08-28, real BPE tokenizers, same 8 Tier-1 tasks):**
 
----
-
-## Community Request
-
-I've only tested this on **Gemini**. I need your help testing on:
-
-- **OpenAI GPT-4o**
-- **Anthropic Claude 3.5 Sonnet**
-
-See **[COMMUNITY_TEST.md](COMMUNITY_TEST.md)** for step-by-step instructions. Takes ~10 minutes and ~$5 in API credits.
-
-Please share your results — compliance %, accuracy %, and token savings.
-
----
-
-## Architecture
-
-```
-Your Framework (LangChain / CrewAI)
-        |
-TOAP Proxy (parse + validate + alias normalize)
-        |
-LLM API (Gemini / GPT-4o / Claude)
-```
-
----
-
-## Status
-
-| Phase | Status |
+| Compared against | TOAP result |
 |---|---|
-| Phase 0 — Benchmark | Gemini validated, Claude/GPT pending community |
-| Phase 1 — SDK | Alpha release (this repo) |
-| Phase 2 — API Gateway | Not started |
-| Phase 3 — Observability SaaS | Not started |
+| Pretty-printed JSON (`indent=2`) — *our benchmark's baseline* | −50.8% (the source of the ~45% claim) |
+| **Minified JSON — what production actually sends** | **+4.6% MORE tokens** (o200k), +11.1% (cl100k) |
+| **Native function-calling arguments** | **+56% MORE tokens** |
+
+---
+
+## Why we dropped it — four reasons
+
+**1. The baseline was a straw man.** `build_json_baseline()` used `json.dumps(payload, indent=2)` plus a `thought` wrapper no tool-calling API bills for. The entire headline number came from that one line.
+
+**2. The tokenizer penalty.** Tokenizers are compression tables, not character counters. The canonical TOAP string and its minified-JSON equivalent are both 71 characters — TOAP costs 26 tokens, JSON costs 18. `{"` is one token because JSON saturates training data; `§T[` is three because `§` and `ƒ` sit outside the frequent-merge tables. The characters chosen to make TOAP distinctive were the exact characters making it expensive.
+
+**3. The ceiling math.** A tool call is ~20–25 tokens. An agent turn is thousands (system prompt, history, tool results, reasoning). Tool-call serialization is ~1–3% of the bill — even a *perfect* compressor saves ~1% of total spend. The denominator was never checked.
+
+**4. Platform timing.** Structured outputs (guaranteed-valid JSON, free), prompt caching, and native tool calling solved the 2023-era pain this project targeted — between the research and the build.
+
+Our PRD §8 had a kill criterion written on day one: *"Net savings < 25% even when compliant → sell reliability/security, not cost."* Measured: ~1.5% on a favourable setup, negative on a fair one. **We honored the criterion.**
+
+---
+
+## What survives (on `main`, as callgate)
+
+The part of TOAP that was never about compression:
+
+| TOAP asset | Lives on as |
+|---|---|
+| Fail-closed proxy | The gate: check every tool call before it executes |
+| Schema gate | Policy layer foundation |
+| Meter + JSON/CSV audit | Audit trail (with real provider token counts) |
+| Benchmark harness skeleton | Failure-scenario suite |
+| Critique-gate dev process | Unchanged — it's what caught this |
+
+Because the real gap was never *"tool calls are too verbose"* — it's *"a schema-valid tool call can still be wrong, dangerous, or unauthorized, and nothing stops it."* `delete_records(filter={})` is perfect JSON.
+
+---
+
+## Lessons (free to steal)
+
+1. Benchmark against what production actually sends, not the prettiest version of the alternative.
+2. Tokenizers are compression tables, not rulers. Measure with the real tokenizer, never `len//4`.
+3. Compute the ceiling before the solution: % improvement × share of total spend = actual value.
+4. Write kill criteria before writing code. Being wrong on paper is cheap.
+5. If your measuring instrument can't detect your hypothesis being false, it isn't measuring.
 
 ---
 
@@ -112,6 +104,4 @@ LLM API (Gemini / GPT-4o / Claude)
 
 MIT — see [`toap-python/LICENSE`](toap-python/LICENSE)
 
----
-
-Built by [Mohammad Safwan Athar](https://github.com/Dev-Saif-Ops) | Initial release August 2026
+Built by [Mohammad Safwan Athar](https://github.com/Dev-Saif-Ops) · Aug 2026 · Archived with respect for the process that killed it.
