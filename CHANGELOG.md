@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.1] - 2026-08-28
+
+Docs-only release to give the PyPI project page a proper landing description.
+
+### Changed
+- Rich PyPI-facing README (`toolwall/README.md`): badges, problem statement,
+  quickstart, feature list, dry-run + MCP examples, honest-status section, links.
+  No code changes; 85 tests unchanged. (PyPI descriptions are per-release, so a
+  version bump is required to refresh the page.)
+
 ## [0.2.0-dev] - 2026-08-28 — Pivot: TOAP → toolwall
 
 ### Why
