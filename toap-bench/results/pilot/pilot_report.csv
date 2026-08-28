@@ -1,9 +1,0 @@
-lane,kind,ok,prompt_tokens,completion_tokens,latency_ms,namespace,error
-baseline,llm,True,328,17,0.0,,
-baseline,intercept,True,0,17,0.0,DB_SRC,
-toap,llm,True,330,14,0.0,,
-toap,intercept,True,0,14,0.06960000609979033,DB_SRC,
-baseline,llm,True,321,14,0.0,,
-baseline,intercept,True,0,14,0.0,DB_SRC,
-toap,llm,True,323,17,0.0,,
-toap,intercept,True,0,17,0.04889999399892986,DB_SRC,
