@@ -33,23 +33,32 @@ LLM tool call (OpenAI / Anthropic / Gemini native JSON, no custom format)
 ```
 
 ```python
-from callgate import Gate, Meter, ToolSchema
+from callgate import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
 
-gate = Gate(default="deny", meter=Meter())     # fail closed, audit on
-gate.register("db_query", db_query, schema=ToolSchema(required=["q"], types={"q": str, "limit": int}))
+gate = Gate(default="deny", meter=Meter(), shield=Shield(mode="block"))
+gate.register("db_query", db_query,
+              schema=ToolSchema(required=["q"], types={"q": str, "limit": int}),
+              policy=Policy(constraints={"limit": in_range(1, 100)}))
+gate.register("delete_records", delete_records,
+              schema=ToolSchema(required=["filter"], types={"filter": dict}),
+              policy=Policy(constraints={"filter": not_empty}, require_approval=True))
+gate.budget(max_calls=20)
 
-result = gate.run(openai_response)             # any provider shape, or a plain dict
-# result.verdict: ALLOW | BLOCK. Blocked calls never execute
+result = gate.run(openai_response)   # any provider shape, or a plain dict
+# result.verdict: ALLOW | BLOCK | NEEDS_APPROVAL. Only ALLOW executes.
 ```
 
 - **Zero required dependencies**: stdlib only, drops into any Python agent
-- **Fail-closed**: unknown tool, schema violation, unparseable payload: blocked
+- **Fail-closed**: unknown tool, schema violation, policy violation, budget hit, unparseable payload: blocked
+- **Policy engine**: value constraints, cross-arg rules, human-approval flags, budget caps
+- **Shield**: secret detection (AWS/OpenAI/GitHub/Stripe/JWT/PEM patterns + entropy) blocks exfil through tool args; audit log never contains the value
 - **Audit trail**: every verdict exported to JSON/CSV (`callgate report audit.json`)
 
-**Honest status:** today's gate covers tool registration + schema (required args, types).
-The policy engine that blocks *value-level* dangers from the examples above (empty
-filters, out-of-range limits, non-allowlisted email domains) is the next cycle (see
-roadmap). Claims will only ever match what the published failure suite proves.
+**Current proof:** the published suite blocks **24/24 attack cases across 9 classes
+with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
+([full report](gate-suite/results/REPORT.md), run it yourself: `python gate-suite/run_suite.py`).
+Detection is pattern + entropy based and is never 100%; the report states exactly
+what is and is not proven.
 
 Try it without an API key:
 
@@ -61,8 +70,9 @@ cd callgate && pip install -e . && python examples/quickstart.py
 
 - [x] Provider intake (OpenAI chat + responses, Anthropic, Gemini, plain dict)
 - [x] Fail-closed gate + schema layer + audit meter
-- [ ] Policy engine: value constraints, allow/deny lists, approval flags, budget caps
-- [ ] Failure-scenario suite (8 attack classes) with published block-rate per release
+- [x] Policy engine: value constraints, cross-arg rules, approval flags, budget caps
+- [x] Shield: secret detection/redaction on tool args and text (registration is the allowlist)
+- [x] Failure-scenario suite: 24 attacks across 9 classes, report published per release
 - [ ] Dry-run mode: full agent run, zero execution, "would-have-done" report
 - [ ] `callgate-mcp`: guard proxy wrapping any MCP server
 - [ ] PyPI release

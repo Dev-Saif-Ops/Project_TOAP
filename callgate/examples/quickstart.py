@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""callgate quickstart — no API key needed.
+"""callgate quickstart. No API key needed.
 
 An agent's tool call (any provider shape) hits the gate before it can execute.
 Well-formed is not the same as allowed.
 """
 
-from callgate import Gate, Meter, ToolSchema
+from callgate import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
 
 
-# --- your existing tools -----------------------------------------------------
+# --- your existing tools -------------------------------------------------------
 
 def db_query(q: str, limit: int = 10) -> dict:
     return {"status": "ok", "q": q, "rows": min(limit, 3)}
@@ -18,17 +18,41 @@ def delete_records(filter: dict) -> dict:
     return {"status": "deleted", "filter": filter}
 
 
-# --- wire the gate -----------------------------------------------------------
+def send_email(to: str, body: str) -> dict:
+    return {"status": "sent", "to": to}
+
+
+# --- wire the gate --------------------------------------------------------------
 
 meter = Meter(model="offline-demo")
-gate = Gate(default="deny", meter=meter)
+gate = Gate(default="deny", meter=meter, shield=Shield(mode="block"))
 
-gate.register("db_query", db_query, schema=ToolSchema(required=["q"], types={"q": str, "limit": int}))
-gate.register("delete_records", delete_records, schema=ToolSchema(required=["filter"], types={"filter": dict}))
+gate.register(
+    "db_query",
+    db_query,
+    schema=ToolSchema(required=["q"], types={"q": str, "limit": int}),
+    policy=Policy(constraints={"limit": in_range(1, 100)}),
+)
+gate.register(
+    "delete_records",
+    delete_records,
+    schema=ToolSchema(required=["filter"], types={"filter": dict}),
+    policy=Policy(constraints={"filter": not_empty}, require_approval=True),
+)
+gate.register(
+    "send_email",
+    send_email,
+    schema=ToolSchema(required=["to", "body"], types={"to": str, "body": str}),
+)
+gate.budget(max_calls=20)
 
 
-# --- 1. a normal call passes (OpenAI response shape) --------------------------
+def show(label: str, result) -> None:
+    reason = result.reasons[0] if result.reasons else ""
+    print(f"[{label}] -> {result.verdict.value:15} executed={result.executed}  {reason}")
 
+
+# 1. normal call passes (OpenAI response shape)
 openai_style = {
     "choices": [
         {
@@ -40,24 +64,28 @@ openai_style = {
         }
     ]
 }
-result = gate.run(openai_style)
-print(f"[1] db_query        -> {result.verdict.value:6}  executed={result.executed}  {result.return_value}")
+show("normal call     ", gate.run(openai_style))
 
+# 2. hallucinated tool: blocked
+show("unknown tool    ", gate.run({"name": "drop_all_tables", "args": {}}))
 
-# --- 2. a hallucinated tool is blocked ----------------------------------------
+# 3. schema-valid but out-of-range value: policy blocks
+show("limit=10000000  ", gate.run({"name": "db_query", "args": {"q": "all", "limit": 10_000_000}}))
 
-result = gate.run({"name": "drop_all_tables", "args": {}})
-print(f"[2] drop_all_tables -> {result.verdict.value:6}  reason: {result.reasons[0]}")
+# 4. empty filter delete: policy blocks the classic table-wipe
+show("delete filter={}", gate.run({"name": "delete_records", "args": {"filter": {}}}))
 
+# 5. valid delete without an approval handler: held, never executed
+show("delete, no appr ", gate.run({"name": "delete_records", "args": {"filter": {"id": 42}}}))
 
-# --- 3. schema-valid shape, missing required arg: blocked ---------------------
+# 6. secret exfil attempt: shield blocks before the email leaves
+show("secret in email ", gate.run({
+    "name": "send_email",
+    "args": {"to": "dev@ourco.com", "body": "creds: " + "AKIA" + "IOSFODNN7EXAMPLE"},
+}))
 
-result = gate.run({"name": "delete_records", "args": {}})
-print(f"[3] delete (no filter) -> {result.verdict.value:6}  reason: {result.reasons[0]}")
-
-
-# --- audit trail ---------------------------------------------------------------
+# --- audit trail -------------------------------------------------------------------
 
 paths = meter.export("audit.json", "audit.csv")
-print(f"\nAudit written: {paths['json']} / {paths['csv']}")
+print(f"\nAudit written: {paths['json']} / {paths['csv']}  (secret values never logged)")
 print("Inspect with:  callgate report audit.json")
