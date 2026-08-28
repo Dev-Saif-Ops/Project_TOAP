@@ -2,11 +2,11 @@
 
 import json
 
-from callgate import Gate, Meter, Shield, ToolSchema, Verdict
-from callgate.shield import shannon_entropy
+from toolwall import Gate, Meter, Shield, ToolSchema, Verdict
+from toolwall.shield import shannon_entropy
 
 # Fixtures are built by concatenation so repo secret-scanners never text-match
-# them; callgate's own runtime detection still catches the assembled strings.
+# them; toolwall's own runtime detection still catches the assembled strings.
 AWS_KEY = "AKIA" + "IOSFODNN7EXAMPLE"
 OPENAI_KEY = "sk-" + "Abc123def456Ghi789jklMNO"
 GITHUB_TOKEN = "ghp_" + "Ab1Cd2Ef3Gh4Ij5Kl6Mn7Op8Qr9St0Uv1Wx2"

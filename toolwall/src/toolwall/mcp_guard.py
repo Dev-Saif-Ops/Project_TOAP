@@ -1,12 +1,12 @@
-"""callgate-mcp: put a fail-closed gate in front of any MCP server.
+"""toolwall-mcp: put a fail-closed gate in front of any MCP server.
 
 MCP (Model Context Protocol) lets a host expose tools to an agent. This guard
 sits between the agent's tool call and the underlying server: the same Gate
 checks name + schema + policy + shield + budget, and only ALLOW calls are
 forwarded. Blocked calls return a structured MCP tool error instead.
 
-The `mcp` package is an optional extra (`pip install callgate[mcp]`); this
-module imports it lazily so callgate core stays stdlib-only. The logic below
+The `mcp` package is an optional extra (`pip install toolwall[mcp]`); this
+module imports it lazily so toolwall core stays stdlib-only. The logic below
 (map_result) is framework-free and unit-tested without any MCP install.
 """
 
@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from callgate.gate import Gate, GateResult, Verdict
+from toolwall.gate import Gate, GateResult, Verdict
 
 
 @dataclass
@@ -36,7 +36,7 @@ def to_mcp_error(result: GateResult) -> dict[str, Any]:
         "content": [
             {
                 "type": "text",
-                "text": f"callgate {result.verdict.value}: {reason}",
+                "text": f"toolwall {result.verdict.value}: {reason}",
             }
         ],
     }
@@ -72,7 +72,7 @@ class MCPGuard:
         clean_args = result.call.args if result.call else args
         downstream = self.forward(name, clean_args)
         if self.gate.meter is not None:
-            from callgate.meter import RunEvent
+            from toolwall.meter import RunEvent
 
             self.gate.meter.record(
                 RunEvent(lane=self.gate.lane, kind="tool", ok=True, namespace=name,
@@ -92,7 +92,7 @@ def build_stdio_guard(gate: Gate, upstream_command: list[str]):  # pragma: no co
         import mcp  # noqa: F401
     except ImportError as exc:
         raise SystemExit(
-            "callgate-mcp needs the MCP extra: pip install 'callgate[mcp]'"
+            "toolwall-mcp needs the MCP extra: pip install 'toolwall[mcp]'"
         ) from exc
     raise NotImplementedError(
         "stdio transport wiring lands with the first real MCP pilot; "

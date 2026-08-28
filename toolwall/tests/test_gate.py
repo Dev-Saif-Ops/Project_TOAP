@@ -2,7 +2,7 @@
 
 import pytest
 
-from callgate import Gate, Meter, ToolSchema, Verdict
+from toolwall import Gate, Meter, ToolSchema, Verdict
 
 
 def db_query(q: str, limit: int = 10) -> dict:

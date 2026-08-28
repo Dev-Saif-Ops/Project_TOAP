@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Put callgate in front of an MCP-style server. No mcp install needed.
+"""Put toolwall in front of an MCP-style server. No mcp install needed.
 
 `forward` stands in for the real downstream server call. In a live setup it
 would invoke the wrapped MCP server; here it just echoes, so you can see which
@@ -8,7 +8,7 @@ calls get through the gate and which are stopped before they ever arrive.
     python examples/mcp_guard_demo.py
 """
 
-from callgate import Gate, Meter, MCPGuard, Policy, Shield, ToolSchema, ends_with, in_range, not_empty
+from toolwall import Gate, Meter, MCPGuard, Policy, Shield, ToolSchema, ends_with, in_range, not_empty
 
 
 # Stand-in for the downstream MCP server. The gate decides what reaches it.

@@ -11,7 +11,7 @@
 |---|---|---|---|
 | Attack cases blocked | **24/24 (100.0%)** | >= 90% | YES |
 | Clean-traffic false blocks | **0** | 0 | YES |
-| p95 check overhead | **0.055 ms** | < 5 ms | YES |
+| p95 check overhead | **0.059 ms** | < 5 ms | YES |
 
 **G1: PASS**
 
@@ -37,4 +37,4 @@ false blocks on the listed clean traffic, at sub-millisecond overhead.
 Does not prove: coverage of secrets without recognizable structure (plain
 passwords), novel exfil channels, or policy mistakes a user writes into
 their own rules. Detection is pattern + entropy based and is never 100%.
-Every claim about callgate must cite this report, nothing broader.
+Every claim about toolwall must cite this report, nothing broader.

@@ -2,7 +2,7 @@
 
 import pytest
 
-from callgate.intake import IntakeError, parse_tool_calls
+from toolwall.intake import IntakeError, parse_tool_calls
 
 
 def test_plain_dict():

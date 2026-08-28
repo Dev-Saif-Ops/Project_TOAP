@@ -1,4 +1,4 @@
-"""Audit/cost meter for callgate (D-016 compliant).
+"""Audit/cost meter for toolwall (D-016 compliant).
 
 Provider usage metadata is the only unflagged token source. Any heuristic count
 carries estimated=True on the event and is called out in the summary. Use

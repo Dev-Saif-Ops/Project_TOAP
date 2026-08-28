@@ -1,4 +1,4 @@
-"""Secret detection and redaction at the callgate checkpoint (D-019).
+"""Secret detection and redaction at the toolwall checkpoint (D-019).
 
 Findings and audit events carry the pattern class and location only, NEVER the
 secret value. Detection is pattern + entropy based and is never 100%; the

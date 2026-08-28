@@ -1,4 +1,4 @@
-"""callgate: fail-closed checkpoint between LLM tool calls and execution.
+"""toolwall: fail-closed checkpoint between LLM tool calls and execution.
 
     gate = Gate(default="deny", meter=meter, shield=Shield(mode="block"))
     gate.register("db_query", db_query,
@@ -18,11 +18,11 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal
 
-from callgate.intake import IntakeError, ToolCall, parse_tool_calls
-from callgate.meter import Meter, RunEvent
-from callgate.policy import Policy
-from callgate.schema import ToolSchema, schema_from_signature
-from callgate.shield import Finding, Shield
+from toolwall.intake import IntakeError, ToolCall, parse_tool_calls
+from toolwall.meter import Meter, RunEvent
+from toolwall.policy import Policy
+from toolwall.schema import ToolSchema, schema_from_signature
+from toolwall.shield import Finding, Shield
 
 ToolFn = Callable[..., Any]
 DefaultMode = Literal["deny", "allow"]

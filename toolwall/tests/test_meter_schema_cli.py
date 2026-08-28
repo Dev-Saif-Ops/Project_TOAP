@@ -2,8 +2,8 @@
 
 import json
 
-from callgate import Meter, ToolSchema, schema_from_signature
-from callgate.cli import cmd_report
+from toolwall import Meter, ToolSchema, schema_from_signature
+from toolwall.cli import cmd_report
 
 
 def test_schema_required_and_types():

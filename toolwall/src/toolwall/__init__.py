@@ -1,13 +1,13 @@
-"""callgate: fail-closed firewall for AI agent tool calls.
+"""toolwall: fail-closed firewall for AI agent tool calls.
 
 Structured outputs guarantee your agent's tool calls are well-formed.
-callgate guarantees they're allowed.
+toolwall guarantees they're allowed.
 """
 
-from callgate.gate import Gate, GateResult, ToolRegistry, Verdict
-from callgate.intake import IntakeError, ToolCall, parse_tool_calls
-from callgate.meter import Meter, RunEvent, RunReport, extract_usage
-from callgate.policy import (
+from toolwall.gate import Gate, GateResult, ToolRegistry, Verdict
+from toolwall.intake import IntakeError, ToolCall, parse_tool_calls
+from toolwall.meter import Meter, RunEvent, RunReport, extract_usage
+from toolwall.policy import (
     Policy,
     ends_with,
     in_range,
@@ -17,10 +17,10 @@ from callgate.policy import (
     one_of,
     starts_with,
 )
-from callgate.schema import ToolSchema, schema_from_signature
-from callgate.shield import Finding, Shield
-from callgate.suggest import suggest_policies
-from callgate.mcp_guard import GuardedCall, MCPGuard, to_mcp_error
+from toolwall.schema import ToolSchema, schema_from_signature
+from toolwall.shield import Finding, Shield
+from toolwall.suggest import suggest_policies
+from toolwall.mcp_guard import GuardedCall, MCPGuard, to_mcp_error
 
 __version__ = "0.2.0"
 

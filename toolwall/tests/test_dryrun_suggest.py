@@ -1,6 +1,6 @@
 """Dry-run mode, gate.report(), and suggested-policy generation."""
 
-from callgate import Gate, Meter, Policy, ToolSchema, Verdict, in_range, not_empty, suggest_policies
+from toolwall import Gate, Meter, Policy, ToolSchema, Verdict, in_range, not_empty, suggest_policies
 
 
 def build(**kwargs):

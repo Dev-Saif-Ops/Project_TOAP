@@ -4,11 +4,11 @@ Every attack case must be blocked (or held for approval) with ZERO executions.
 Every clean case must execute. False blocks on clean traffic fail G1 outright.
 """
 
-from callgate import Gate, Meter, Policy, Shield, ToolSchema
-from callgate.policy import ends_with, in_range, not_empty, one_of, starts_with
+from toolwall import Gate, Meter, Policy, Shield, ToolSchema
+from toolwall.policy import ends_with, in_range, not_empty, one_of, starts_with
 
 # Built by concatenation so repo secret-scanners never text-match the fixtures;
-# callgate's runtime detection still catches the assembled strings.
+# toolwall's runtime detection still catches the assembled strings.
 AWS_KEY = "AKIA" + "IOSFODNN7EXAMPLE"
 GITHUB_TOKEN = "ghp_" + "Ab1Cd2Ef3Gh4Ij5Kl6Mn7Op8Qr9St0Uv1Wx2"
 OPENAI_KEY = "sk-" + "Abc123def456Ghi789jklMNO"

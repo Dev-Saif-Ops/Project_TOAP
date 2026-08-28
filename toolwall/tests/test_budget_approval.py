@@ -2,7 +2,7 @@
 
 import pytest
 
-from callgate import Gate, Meter, Policy, ToolSchema, Verdict, not_empty
+from toolwall import Gate, Meter, Policy, ToolSchema, Verdict, not_empty
 
 
 def make_gate(**kwargs):

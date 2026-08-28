@@ -1,6 +1,6 @@
 """Meter D-016: provider counts are exact; heuristics are flagged."""
 
-from callgate import Meter, extract_usage
+from toolwall import Meter, extract_usage
 
 
 def test_explicit_counts_not_estimated():

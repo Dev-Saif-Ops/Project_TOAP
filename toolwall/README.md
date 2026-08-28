@@ -1,4 +1,4 @@
-# callgate (package)
+# toolwall (package)
 
 Fail-closed firewall for AI agent tool calls. See the [repo README](../README.md) for the full story.
 
@@ -16,4 +16,4 @@ pytest                          # run the suite
 | `gate.py` | Fail-closed check → verdict → (optional) execute |
 | `schema.py` | Required args + type validation before `tool(**args)` |
 | `meter.py` | Audit events, token/cost accounting, JSON/CSV export |
-| `cli.py` | `callgate report <audit.json>` |
+| `cli.py` | `toolwall report <audit.json>` |

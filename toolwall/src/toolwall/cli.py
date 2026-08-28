@@ -1,4 +1,4 @@
-"""callgate CLI — inspect meter/audit exports."""
+"""toolwall CLI — inspect meter/audit exports."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def cmd_report(args: argparse.Namespace) -> int:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(prog="callgate", description="callgate dev tools")
+    ap = argparse.ArgumentParser(prog="toolwall", description="toolwall dev tools")
     sub = ap.add_subparsers(dest="command", required=True)
 
     report = sub.add_parser("report", help="Print summary from a Meter JSON export")

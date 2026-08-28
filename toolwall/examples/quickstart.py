@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""callgate quickstart. No API key needed.
+"""toolwall quickstart. No API key needed.
 
 An agent's tool call (any provider shape) hits the gate before it can execute.
 Well-formed is not the same as allowed.
 """
 
-from callgate import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
+from toolwall import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
 
 
 # --- your existing tools -------------------------------------------------------
@@ -88,4 +88,4 @@ show("secret in email ", gate.run({
 
 paths = meter.export("audit.json", "audit.csv")
 print(f"\nAudit written: {paths['json']} / {paths['csv']}  (secret values never logged)")
-print("Inspect with:  callgate report audit.json")
+print("Inspect with:  toolwall report audit.json")

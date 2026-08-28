@@ -5,7 +5,7 @@ requires = ["hatchling<1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "callgate"
+name = "toolwall"
 version = "0.2.0"
 description = "Fail-closed firewall for AI agent tool calls: schema + policy gate before any tool executes"
 readme = "README.md"
@@ -28,16 +28,16 @@ mcp = ["mcp>=1.0.0"]
 dev = ["pytest>=8.0", "pytest-cov>=4.0"]
 
 [project.scripts]
-callgate = "callgate.cli:main"
+toolwall = "toolwall.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/Dev-Saif-Ops/Project_TOAP"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/callgate"]
+packages = ["src/toolwall"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/callgate", "README.md", "LICENSE"]
+include = ["src/toolwall", "README.md", "LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

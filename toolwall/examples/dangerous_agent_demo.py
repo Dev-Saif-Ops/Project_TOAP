@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The demo: an unsafe agent, with and without callgate.
+"""The demo: an unsafe agent, with and without toolwall.
 
 An agent that has gone off the rails (confused, or fed bad context) tries six
 side-effectful actions. We replay the same tool calls twice: once ungated
@@ -11,7 +11,7 @@ whole point is what the gate stops.
     python examples/dangerous_agent_demo.py
 """
 
-from callgate import Gate, Meter, Policy, Shield, ToolSchema, ends_with, in_range, not_empty, one_of
+from toolwall import Gate, Meter, Policy, Shield, ToolSchema, ends_with, in_range, not_empty, one_of
 
 # --- a fake world the agent can damage ----------------------------------------
 
@@ -65,7 +65,7 @@ AGENT_PLAN = [
 
 
 def run_ungated():
-    print("=== WITHOUT callgate ===")
+    print("=== WITHOUT toolwall ===")
     for step in AGENT_PLAN:
         TOOLS[step["name"]](**step["args"])
     print(f"  rows left in table : {WORLD['rows']}   (started at 10000)")
@@ -100,7 +100,7 @@ def build_gate():
 def run_gated():
     for k, v in {"rows": 10_000, "emails_sent": [], "deployed": None, "files_read": []}.items():
         WORLD[k] = v
-    print("=== WITH callgate (no approval handler = destructive calls held) ===")
+    print("=== WITH toolwall (no approval handler = destructive calls held) ===")
     gate = build_gate()
     for step in AGENT_PLAN:
         result = gate.run(step)

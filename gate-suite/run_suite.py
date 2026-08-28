@@ -21,10 +21,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(HERE.parent / "callgate" / "src"))
+sys.path.insert(0, str(HERE.parent / "toolwall" / "src"))
 
 from cases import ATTACK_CASES, CLEAN_CASES, build_gate  # noqa: E402
-from callgate import Verdict  # noqa: E402
+from toolwall import Verdict  # noqa: E402
 
 
 def make_handler(flag):
@@ -139,7 +139,7 @@ def main() -> int:
         "Does not prove: coverage of secrets without recognizable structure (plain",
         "passwords), novel exfil channels, or policy mistakes a user writes into",
         "their own rules. Detection is pattern + entropy based and is never 100%.",
-        "Every claim about callgate must cite this report, nothing broader.",
+        "Every claim about toolwall must cite this report, nothing broader.",
         "",
     ]
 

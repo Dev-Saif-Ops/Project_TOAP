@@ -8,7 +8,7 @@ Accepted shapes (dicts, or SDK objects exposing model_dump()/to_dict()):
 - Anthropic:         content[*] where type == "tool_use" {name, input}
 - Gemini:            candidates[*].content.parts[*].functionCall|function_call {name, args}
 
-No provider SDK is imported here — callgate core stays stdlib-only.
+No provider SDK is imported here — toolwall core stays stdlib-only.
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0-dev] - 2026-08-28 — Pivot: TOAP → callgate
+## [0.2.0-dev] - 2026-08-28 — Pivot: TOAP → toolwall
 
 ### Why
 TOAP's compression thesis failed an honest re-measurement: vs minified JSON it was
@@ -10,11 +10,11 @@ The ~45% claim traced to an `indent=2` baseline. Our own PRD kill criterion
 Full postmortem: `toap-v0.1-archive` branch README.
 
 ### Added
-- `callgate` package: fail-closed firewall for agent tool calls
+- `toolwall` package: fail-closed firewall for agent tool calls
 - `intake.py`: OpenAI (chat + responses), Anthropic, Gemini, and plain-dict tool-call normalization
 - `gate.py`: `Gate` with `default="deny"|"allow"`, `check`/`execute` split, `run`/`run_all`, verdict enum
 - Audit events for every verdict via surviving `Meter` (JSON/CSV export)
-- `callgate report` CLI
+- `toolwall report` CLI
 - New test suite: intake shapes, all gate verdict paths, schema, meter, CLI
 
 ### Removed
@@ -51,7 +51,7 @@ Full postmortem: `toap-v0.1-archive` branch README.
 ### Added (phase1-mcp cycle, same day)
 - `mcp_guard.py`: `MCPGuard` puts a Gate in front of any MCP server; only ALLOW calls forward, blocks/held return an MCP-style tool error (`to_mcp_error`). Decision core is framework-free and fully unit-tested without an MCP install
 - Shield redaction is applied to forwarded args (server never sees the secret)
-- `mcp` optional extra (`pip install callgate[mcp]`); core stays stdlib-only
+- `mcp` optional extra (`pip install toolwall[mcp]`); core stays stdlib-only
 - `examples/mcp_guard_demo.py`
 - D-020: neutral vocabulary in defensive fixtures (avoids content-classifier false flags); suite classes renamed, coverage unchanged
 - Tests grown to 85
@@ -59,7 +59,7 @@ Full postmortem: `toap-v0.1-archive` branch README.
 ### Added (phase1-release cycle, same day)
 - Verified the package builds (`python -m build`), passes `twine check`, and installs
   clean into a fresh venv with zero required deps (only `mcp`/`dev` extras)
-- `callgate/RELEASING.md`: manual, owner-run publish steps (Test PyPI first)
+- `toolwall/RELEASING.md`: manual, owner-run publish steps (Test PyPI first)
 - `mcp>=1.0.0` optional extra confirmed in built metadata
 
 ### Pending (next cycles, per plan.md)

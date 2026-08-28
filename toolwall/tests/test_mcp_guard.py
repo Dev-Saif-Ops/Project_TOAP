@@ -1,7 +1,7 @@
 """MCPGuard decision logic, tested without any MCP install."""
 
-from callgate import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
-from callgate.mcp_guard import MCPGuard, to_mcp_error
+from toolwall import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
+from toolwall.mcp_guard import MCPGuard, to_mcp_error
 
 
 def build_guard(**gate_kwargs):
@@ -110,7 +110,7 @@ def test_to_mcp_error_shape():
     err = out.result
     assert err["isError"] is True
     assert err["content"][0]["type"] == "text"
-    assert "callgate block" in err["content"][0]["text"]
+    assert "toolwall block" in err["content"][0]["text"]
 
 
 def test_meter_records_forwarded_calls():

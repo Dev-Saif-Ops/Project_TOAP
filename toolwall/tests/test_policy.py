@@ -1,7 +1,7 @@
 """Policy layer: value constraints, cross rules, fail-closed on rule errors."""
 
-from callgate import Gate, Policy, ToolSchema, Verdict, in_range, matches, max_len, not_empty, one_of
-from callgate.policy import ends_with, starts_with
+from toolwall import Gate, Policy, ToolSchema, Verdict, in_range, matches, max_len, not_empty, one_of
+from toolwall.policy import ends_with, starts_with
 
 
 def test_constraint_pass_and_fail():
