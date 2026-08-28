@@ -212,7 +212,7 @@ python ../gate-suite/run_suite.py         # 25/25 attacks blocked, prints the G1
 
 ### Planned
 
-- [ ] **Stateful / cross-call sequence policies**: catch attacks where each call is individually valid but the *sequence* is dangerous (read a secret then send an email, many small deletes that add up). Budget caps already track cross-call count and cost state, and `gate.history` records every call, so a stateful policy hook is the natural next layer. (Requested by the community; the hard part is that "dangerous across a sequence" is context dependent.)
+- [ ] **Stateful / cross-call sequence policies**: catch attacks where each call is individually valid but the *sequence* is dangerous. Community-supplied threat model: `read -> exfiltrate`, `lookup -> purchase`, and repeated low-risk calls against a cumulative budget (that last one is already covered by budget caps). Budget caps track cross-call count and cost, and `gate.history` records every call, so a stateful hook is the natural next layer. Two things have to land first: sequence rules must filter on *executed* calls (a blocked read must not arm a `read -> exfiltrate` rule), and history needs a branch/turn boundary so an abandoned branch cannot trigger a rule.
 
 ## What happened to TOAP?
 
