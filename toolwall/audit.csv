@@ -1,0 +1,8 @@
+lane,kind,ok,prompt_tokens,completion_tokens,latency_ms,namespace,error,estimated
+gate,intercept,True,0,0,0.0,db_query,,False
+gate,tool,True,0,0,0.0,db_query,,False
+gate,intercept,False,0,0,0.0,drop_all_tables,unknown tool: 'drop_all_tables',False
+gate,intercept,False,0,0,0.0,db_query,"policy violation: arg 'limit' rejected by in_range(1, 100)",False
+gate,intercept,False,0,0,0.0,delete_records,policy violation: arg 'filter' rejected by not_empty,False
+gate,intercept,False,0,0,0.0,delete_records,approval required for 'delete_records',False
+gate,intercept,False,0,0,0.0,send_email,secret detected (aws-access-key) in arg 'body',False

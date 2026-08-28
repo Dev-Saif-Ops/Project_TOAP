@@ -71,30 +71,50 @@ with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
 Detection is pattern + entropy based and is never 100%; the report states exactly
 what is and is not proven.
 
-Install:
+## How to use
+
+### 1. Install
 
 ```bash
 pip install toolwall
 ```
 
-Try it without an API key (from a clone):
-
-```bash
-cd toolwall
-python examples/quickstart.py             # 6 gated scenarios
-python examples/dangerous_agent_demo.py   # off-the-rails agent, with vs without the gate
-```
-
-### Dry-run: see what your agent would do, before it does anything
+### 2. Wire the gate in front of your tools
 
 ```python
-gate = Gate(default="deny", dry_run=True, meter=Meter())
-# ... run your agent; ALLOW calls are simulated, never executed ...
-print(gate.report())                 # verdict counts, blocked reasons, secrets caught
-print(suggest_policies(gate))        # draft schema+policy from what was observed, for you to review
+from toolwall import Gate, Shield, ToolSchema, Policy, not_empty
+
+gate = Gate(default="deny", shield=Shield(mode="block"))
+gate.register(
+    "delete_records", delete_records,
+    schema=ToolSchema(required=["filter"], types={"filter": dict}),
+    policy=Policy(constraints={"filter": not_empty}),
+)
+
+print(gate.run({"name": "delete_records", "args": {"filter": {}}}).verdict)        # block (empty filter)
+print(gate.run({"name": "delete_records", "args": {"filter": {"id": 5}}}).verdict) # allow
+print(gate.run({"name": "hacked_tool", "args": {}}).verdict)                        # block (unknown tool)
 ```
 
-### Guard an MCP server
+`gate.run(x)` accepts an OpenAI / Anthropic / Gemini response object or a plain
+`{"name", "args"}` dict. Only an `ALLOW` verdict executes the tool.
+
+### 3. Start in dry-run: see what your agent would do, before it does anything
+
+```python
+from toolwall import Gate, Meter, suggest_policies
+
+gate = Gate(default="deny", dry_run=True, meter=Meter())
+# ... run your agent as usual; ALLOW calls are simulated, never executed ...
+print(gate.report())            # verdict counts, blocked reasons, secrets caught
+print(suggest_policies(gate))   # a draft schema + policy from the calls observed, for you to review
+gate.meter.export("audit.json", "audit.csv")
+```
+
+This is the safest way to try toolwall on a real agent: nothing executes, and you
+get a report of what it *would* have done plus a starter policy.
+
+### 4. Guard an MCP server
 
 ```python
 from toolwall import Gate, MCPGuard
@@ -102,7 +122,33 @@ guard = MCPGuard(gate, forward=call_downstream_mcp_server)
 decision = guard.handle(tool_name, args)   # only ALLOW is forwarded; blocks return an MCP error
 ```
 
-See `examples/mcp_guard_demo.py`. Install the transport extra with `pip install 'toolwall[mcp]'`.
+Install the transport extra with `pip install 'toolwall[mcp]'`.
+
+## Examples
+
+Runnable from a clone of this repo (`cd toolwall`):
+
+| Example | What it shows | Needs a key? |
+|---|---|---|
+| [`examples/quickstart.py`](toolwall/examples/quickstart.py) | Six gated scenarios: allow, unknown tool, out-of-range, empty-filter delete, approval hold, secret block | No |
+| [`examples/dangerous_agent_demo.py`](toolwall/examples/dangerous_agent_demo.py) | An off-the-rails agent replayed with vs without the gate: table wiped and secrets leaked ungated, all stopped gated | No |
+| [`examples/mcp_guard_demo.py`](toolwall/examples/mcp_guard_demo.py) | The same gate in front of an MCP-style server: only the safe call reaches it | No |
+| [`examples/live_gemini_agent.py`](toolwall/examples/live_gemini_agent.py) | A **real Gemini agent** using native function calling; toolwall allows the safe query, holds a destructive delete for approval, and blocks a secret leaving via email | `GEMINI_API_KEY` |
+
+```bash
+cd toolwall
+python examples/quickstart.py
+python examples/dangerous_agent_demo.py
+python examples/live_gemini_agent.py     # set GEMINI_API_KEY first
+```
+
+Run the tests and the published attack suite yourself:
+
+```bash
+cd toolwall && pip install -e ".[dev]"
+pytest                                    # 85 tests
+python ../gate-suite/run_suite.py         # 24/24 attacks blocked, prints the G1 report
+```
 
 ## Roadmap (Phase 0 → 1)
 
@@ -115,7 +161,7 @@ See `examples/mcp_guard_demo.py`. Install the transport extra with `pip install 
 - [x] Suggested-policy generator: observed calls -> reviewable draft schema + policy
 - [x] `toolwall-mcp`: `MCPGuard` puts the gate in front of any MCP server (tested core; stdio wiring lands with first pilot)
 - [x] Release-ready: builds clean, `twine check` passes, clean-install verified ([RELEASING.md](toolwall/RELEASING.md))
-- [x] **Published to PyPI** — [`pip install toolwall`](https://pypi.org/project/toolwall/)
+- [x] **Published to PyPI**: [`pip install toolwall`](https://pypi.org/project/toolwall/)
 
 ## What happened to TOAP?
 

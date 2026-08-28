@@ -11,7 +11,7 @@
 |---|---|---|---|
 | Attack cases blocked | **24/24 (100.0%)** | >= 90% | YES |
 | Clean-traffic false blocks | **0** | 0 | YES |
-| p95 check overhead | **0.059 ms** | < 5 ms | YES |
+| p95 check overhead | **0.058 ms** | < 5 ms | YES |
 
 **G1: PASS**
 

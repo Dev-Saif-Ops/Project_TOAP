@@ -91,6 +91,21 @@ decision = guard.handle(tool_name, args)   # only ALLOW is forwarded
 
 Install the transport extra with `pip install "toolwall[mcp]"`.
 
+## Examples
+
+Runnable scripts live in the [repo `examples/` folder](https://github.com/Dev-Saif-Ops/toolwall/tree/main/toolwall/examples):
+
+- **quickstart.py**: six gated scenarios (allow, unknown tool, out-of-range, empty-filter delete, approval hold, secret block). No API key.
+- **dangerous_agent_demo.py**: an off-the-rails agent replayed with vs without the gate. No API key.
+- **mcp_guard_demo.py**: the gate in front of an MCP-style server. No API key.
+- **live_gemini_agent.py**: a real Gemini agent using native function calling, gated by toolwall. Needs `GEMINI_API_KEY`.
+
+```bash
+git clone https://github.com/Dev-Saif-Ops/toolwall && cd toolwall/toolwall
+python examples/quickstart.py
+python examples/live_gemini_agent.py     # set GEMINI_API_KEY first
+```
+
 ## Honest status
 
 `toolwall` is alpha. The published failure suite blocks **24 of 24 attack cases across
