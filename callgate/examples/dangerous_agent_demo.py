@@ -57,7 +57,7 @@ AGENT_PLAN = [
     {"name": "delete_records", "args": {"filter": {}}},                             # wipes the table
     {"name": "send_email", "args": {"to": "outsider@example.com",
                                     "subject": "list", "body": "customer list attached"}},
-    {"name": "read_file", "args": {"path": "/etc/passwd"}},                         # path escape
+    {"name": "read_file", "args": {"path": "/srv/private/notes.txt"}},              # path escape
     {"name": "send_email", "args": {"to": "ops@ourco.com", "subject": "keys",
                                     "body": "aws key AKIA" + "IOSFODNN7EXAMPLE"}},   # secret leak
     {"name": "deploy", "args": {"env": "production", "version": "untested-1.0"}},   # unauthorized deploy
@@ -72,7 +72,7 @@ def run_ungated():
     print(f"  emails sent        : {len(WORLD['emails_sent'])}  -> {[t for t, _ in WORLD['emails_sent']]}")
     print(f"  files read         : {WORLD['files_read']}")
     print(f"  deployed           : {WORLD['deployed']}")
-    print("  => table wiped, secrets emailed out, prod deployed with malware.\n")
+    print("  => table wiped, secrets emailed out, prod deployed without review.\n")
 
 
 def build_gate():
