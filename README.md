@@ -210,6 +210,10 @@ python ../gate-suite/run_suite.py         # 24/24 attacks blocked, prints the G1
 - [x] Release-ready: builds clean, `twine check` passes, clean-install verified ([RELEASING.md](toolwall/RELEASING.md))
 - [x] **Published to PyPI**: [`pip install toolwall`](https://pypi.org/project/toolwall/)
 
+### Planned
+
+- [ ] **Stateful / cross-call sequence policies**: catch attacks where each call is individually valid but the *sequence* is dangerous (read a secret then send an email, many small deletes that add up). Budget caps already track cross-call count and cost state, and `gate.history` records every call, so a stateful policy hook is the natural next layer. (Requested by the community; the hard part is that "dangerous across a sequence" is context dependent.)
+
 ## What happened to TOAP?
 
 This repo used to be **TOAP**, a token-compression DSL for tool calls. We measured it honestly and killed it. The full postmortem (real numbers, tokenizer analysis, lessons) is on the [`toap-v0.1-archive`](https://github.com/Dev-Saif-Ops/toolwall/tree/toap-v0.1-archive) branch. toolwall keeps the part of TOAP that was never about compression: the fail-closed checkpoint between the model and your tools.
