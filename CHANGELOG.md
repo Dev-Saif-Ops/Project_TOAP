@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0] - 2026-08-28
+
+### Added
+- `ToolWall`: an ergonomic facade over `Gate`, now the primary entry point.
+  `ToolWall()` wires a Gate with a Shield and Meter already attached; use
+  `.register(...)`, `.call(name, args)`, `.guard(response)`, `.dry_run`,
+  `.report()`, `.export()`. `Gate` remains the low-level primitive.
+- `GateResult.blocked`, `.needs_approval`, and `.reason` convenience properties.
+- 12 new tests (97 total).
+
+### Changed
+- Problem-led positioning across both READMEs ("The security gateway for AI
+  agent tool calls"), attack-example blocks, expanded PyPI keywords for
+  discovery (ai-agent-security, mcp-firewall, prompt-injection, ...).
+
 ## [0.2.2] - 2026-08-28
 
 Docs release: brings the PyPI page in sync with the repo.

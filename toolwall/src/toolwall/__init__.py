@@ -5,6 +5,7 @@ toolwall guarantees they're allowed.
 """
 
 from toolwall.gate import Gate, GateResult, ToolRegistry, Verdict
+from toolwall.wall import ToolWall
 from toolwall.intake import IntakeError, ToolCall, parse_tool_calls
 from toolwall.meter import Meter, RunEvent, RunReport, extract_usage
 from toolwall.policy import (
@@ -22,9 +23,10 @@ from toolwall.shield import Finding, Shield
 from toolwall.suggest import suggest_policies
 from toolwall.mcp_guard import GuardedCall, MCPGuard, to_mcp_error
 
-__version__ = "0.2.2"
+__version__ = "0.3.0"
 
 __all__ = [
+    "ToolWall",
     "Gate",
     "GateResult",
     "Verdict",

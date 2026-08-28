@@ -91,6 +91,19 @@ class GateResult:
     def allowed(self) -> bool:
         return self.verdict is Verdict.ALLOW
 
+    @property
+    def blocked(self) -> bool:
+        return self.verdict is Verdict.BLOCK
+
+    @property
+    def needs_approval(self) -> bool:
+        return self.verdict is Verdict.NEEDS_APPROVAL
+
+    @property
+    def reason(self) -> str | None:
+        """First human-readable reason for a block/hold, or None when allowed."""
+        return self.reasons[0] if self.reasons else None
+
 
 class Gate:
     """Fail-closed gate.

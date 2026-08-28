@@ -6,13 +6,18 @@ build-backend = "hatchling.build"
 
 [project]
 name = "toolwall"
-version = "0.2.2"
-description = "Fail-closed firewall for AI agent tool calls: schema + policy gate before any tool executes"
+version = "0.3.0"
+description = "Security gateway for AI agent tool calls: fail-closed schema + policy + secret-detection gate before any tool executes"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [{ name = "Mohammad Safwan Athar" }]
-keywords = ["ai", "agents", "llm", "tool-calling", "guardrails", "security", "mcp"]
+keywords = [
+    "ai", "agents", "ai-agents", "llm", "llm-security", "ai-agent-security",
+    "agent-security", "tool-calling", "tool-call-validation", "guardrails",
+    "security", "ai-safety", "mcp", "mcp-security", "mcp-firewall", "mcp-proxy",
+    "prompt-injection", "secret-detection", "agent-sandbox", "firewall",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
