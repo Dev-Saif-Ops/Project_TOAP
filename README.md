@@ -193,8 +193,8 @@ Run the tests and the published attack suite yourself:
 
 ```bash
 cd toolwall && pip install -e ".[dev]"
-pytest                                    # 85 tests
-python ../gate-suite/run_suite.py         # 24/24 attacks blocked, prints the G1 report
+pytest                                    # 110 tests
+python ../gate-suite/run_suite.py         # 25/25 attacks blocked, prints the G1 report
 ```
 
 ## Roadmap (Phase 0 → 1)
