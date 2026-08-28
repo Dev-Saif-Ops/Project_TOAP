@@ -56,9 +56,15 @@ Full postmortem: `toap-v0.1-archive` branch README.
 - D-020: neutral vocabulary in defensive fixtures (avoids content-classifier false flags); suite classes renamed, coverage unchanged
 - Tests grown to 85
 
+### Added (phase1-release cycle, same day)
+- Verified the package builds (`python -m build`), passes `twine check`, and installs
+  clean into a fresh venv with zero required deps (only `mcp`/`dev` extras)
+- `callgate/RELEASING.md`: manual, owner-run publish steps (Test PyPI first)
+- `mcp>=1.0.0` optional extra confirmed in built metadata
+
 ### Pending (next cycles, per plan.md)
 - MCP stdio transport wiring (lands with first real pilot)
-- PyPI release
+- PyPI publish (manual step, owner runs with their own token)
 - Approval CLI UX
 
 ## [0.1.0-alpha] - 2026-08-19 (TOAP, archived)

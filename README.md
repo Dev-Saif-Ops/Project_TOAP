@@ -97,7 +97,8 @@ See `examples/mcp_guard_demo.py`. Install the transport extra with `pip install 
 - [x] Dry-run mode: full agent run, zero execution, `gate.report()` "would-have-done" summary
 - [x] Suggested-policy generator: observed calls -> reviewable draft schema + policy
 - [x] `callgate-mcp`: `MCPGuard` puts the gate in front of any MCP server (tested core; stdio wiring lands with first pilot)
-- [ ] PyPI release
+- [x] Release-ready: builds clean, `twine check` passes, clean-install verified ([RELEASING.md](callgate/RELEASING.md))
+- [ ] PyPI publish (manual, owner-run)
 
 ## What happened to TOAP?
 
