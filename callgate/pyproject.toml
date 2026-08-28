@@ -1,5 +1,7 @@
 [build-system]
-requires = ["hatchling"]
+# Pin hatchling below the release that emits Metadata-Version 2.4/2.5.
+# PyPI's upload endpoint accepts up to 2.3; newer metadata is rejected with a 400.
+requires = ["hatchling<1.27"]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,13 +9,14 @@ name = "callgate"
 version = "0.2.0"
 description = "Fail-closed firewall for AI agent tool calls: schema + policy gate before any tool executes"
 readme = "README.md"
-license = "MIT"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [{ name = "Mohammad Safwan Athar" }]
 keywords = ["ai", "agents", "llm", "tool-calling", "guardrails", "security", "mcp"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries",
     "Topic :: Security",
