@@ -48,8 +48,16 @@ Full postmortem: `toap-v0.1-archive` branch README.
 - `examples/dangerous_agent_demo.py`: an off-the-rails agent replayed with vs without the gate (defensive demonstration; no real side effects)
 - Tests grown to 76
 
+### Added (phase1-mcp cycle, same day)
+- `mcp_guard.py`: `MCPGuard` puts a Gate in front of any MCP server; only ALLOW calls forward, blocks/held return an MCP-style tool error (`to_mcp_error`). Decision core is framework-free and fully unit-tested without an MCP install
+- Shield redaction is applied to forwarded args (server never sees the secret)
+- `mcp` optional extra (`pip install callgate[mcp]`); core stays stdlib-only
+- `examples/mcp_guard_demo.py`
+- D-020: neutral vocabulary in defensive fixtures (avoids content-classifier false flags); suite classes renamed, coverage unchanged
+- Tests grown to 85
+
 ### Pending (next cycles, per plan.md)
-- `callgate-mcp` guard proxy
+- MCP stdio transport wiring (lands with first real pilot)
 - PyPI release
 - Approval CLI UX
 

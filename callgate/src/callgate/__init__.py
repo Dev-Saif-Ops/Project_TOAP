@@ -20,6 +20,7 @@ from callgate.policy import (
 from callgate.schema import ToolSchema, schema_from_signature
 from callgate.shield import Finding, Shield
 from callgate.suggest import suggest_policies
+from callgate.mcp_guard import GuardedCall, MCPGuard, to_mcp_error
 
 __version__ = "0.2.0.dev0"
 
@@ -48,5 +49,8 @@ __all__ = [
     "Shield",
     "Finding",
     "suggest_policies",
+    "MCPGuard",
+    "GuardedCall",
+    "to_mcp_error",
     "__version__",
 ]

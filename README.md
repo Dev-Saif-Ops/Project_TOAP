@@ -77,6 +77,16 @@ print(gate.report())                 # verdict counts, blocked reasons, secrets 
 print(suggest_policies(gate))        # draft schema+policy from what was observed, for you to review
 ```
 
+### Guard an MCP server
+
+```python
+from callgate import Gate, MCPGuard
+guard = MCPGuard(gate, forward=call_downstream_mcp_server)
+decision = guard.handle(tool_name, args)   # only ALLOW is forwarded; blocks return an MCP error
+```
+
+See `examples/mcp_guard_demo.py`. Install the transport extra with `pip install 'callgate[mcp]'`.
+
 ## Roadmap (Phase 0 → 1)
 
 - [x] Provider intake (OpenAI chat + responses, Anthropic, Gemini, plain dict)
@@ -86,7 +96,7 @@ print(suggest_policies(gate))        # draft schema+policy from what was observe
 - [x] Failure-scenario suite: 24 attacks across 9 classes, report published per release
 - [x] Dry-run mode: full agent run, zero execution, `gate.report()` "would-have-done" summary
 - [x] Suggested-policy generator: observed calls -> reviewable draft schema + policy
-- [ ] `callgate-mcp`: guard proxy wrapping any MCP server
+- [x] `callgate-mcp`: `MCPGuard` puts the gate in front of any MCP server (tested core; stdio wiring lands with first pilot)
 - [ ] PyPI release
 
 ## What happened to TOAP?
