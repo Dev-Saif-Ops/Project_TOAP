@@ -84,6 +84,7 @@ class Shield:
         entropy: bool = True,
         entropy_threshold: float = 4.5,
         allowlist: tuple[str, ...] | set[str] = (),
+        scan_output: bool = True,
     ) -> None:
         if mode not in ("redact", "block", "warn"):
             raise ValueError(f"mode must be redact|block|warn, got {mode!r}")
@@ -92,6 +93,8 @@ class Shield:
         self.entropy = entropy
         self.entropy_threshold = entropy_threshold
         self.allowlist = set(allowlist)
+        # Also apply this shield to tool return values, not just call arguments.
+        self.scan_output = scan_output
         self._vault: dict[str, str] = {}
         self._counts: dict[str, int] = {}
 

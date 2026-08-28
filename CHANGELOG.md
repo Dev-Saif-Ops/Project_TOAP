@@ -12,6 +12,20 @@
 - Budget counter reads and writes are now guarded by a lock. A `Gate` is still
   intended for one agent execution context; `check_all()` documents that checking
   many calls without executing them does not advance budget state.
+- **Silent tool replacement.** Registering a name twice overwrote the first tool
+  (and could leave a stale policy attached). Re-registration now raises unless
+  `replace=True`, and a replace drops the previous schema/policy so a new tool
+  can never inherit constraints written for the old one.
+
+### Added
+- **Tool output scanning.** The shield only ever saw tool *arguments*, so a tool
+  that read a secret out of a database or file handed it straight back to the
+  model. Return values now get the same treatment: `block` withholds the value,
+  `redact` substitutes placeholders, `warn` records findings. Disable with
+  `Shield(scan_output=False)`. Output findings are tagged `return.*` and, like all
+  findings, never carry the value.
+- Attack suite grew a tenth class, `output-exfil`: **25/25 blocked, 0 false blocks**.
+- Tests grown to 110.
 
 ## [0.3.0] - 2026-08-28
 

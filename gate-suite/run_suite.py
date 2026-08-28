@@ -46,7 +46,12 @@ def run_case(case: dict) -> dict:
         results = gate.run_all(case["payload"])
         latencies.append((time.perf_counter() - start) * 1000)
         for r in results:
-            steps.append({"verdict": r.verdict.value, "executed": r.executed})
+            steps.append({
+                "verdict": r.verdict.value,
+                "executed": r.executed,
+                "returned": r.return_value,
+                "error": r.error,
+            })
 
     executed_flags = [s["executed"] for s in steps]
 
@@ -57,6 +62,12 @@ def run_case(case: dict) -> dict:
         passed = all(executed_flags)
     elif case["expect"] == "approval":
         passed = not any(executed_flags) and all(s["verdict"] == Verdict.NEEDS_APPROVAL.value for s in steps)
+    elif case["expect"] == "output_withheld":
+        # The tool is allowed to run, but its return value must not come back.
+        passed = all(
+            s["returned"] is None and s["error"] and "output withheld" in s["error"]
+            for s in steps
+        )
     else:  # block
         passed = not any(executed_flags) and all(s["verdict"] == Verdict.BLOCK.value for s in steps)
 

@@ -79,9 +79,10 @@ Everything not explicitly allowed is blocked. That is the whole idea.
   or unparseable payload all block *before* the tool runs. Registration is the allowlist.
 - **Policy engine**: value constraints (`in_range`, `one_of`, `matches`, `ends_with`…),
   cross-argument rules, human-approval flags, and budget caps (calls / per-tool / USD).
-- **Shield**: detects secrets (AWS, OpenAI, GitHub, Stripe, Slack, JWT, PEM, and
-  high-entropy strings) in tool arguments and blocks or redacts them. The audit log
-  never contains the secret value.
+- **Shield, both directions**: detects secrets (AWS, OpenAI, GitHub, Stripe, Slack,
+  JWT, PEM, and high-entropy strings) in tool arguments *and in tool return values*,
+  then blocks or redacts them. A tool that reads a secret out of a database can't
+  hand it back to the model. The audit log never contains the secret value.
 - **Dry-run**: run your whole agent with `dry_run=True`: nothing executes, and
   `gate.report()` tells you what it *would* have done. `suggest_policies(gate)` drafts
   a starter policy from the calls it observed.
@@ -127,8 +128,8 @@ python examples/live_gemini_agent.py     # set GEMINI_API_KEY first
 
 ## Honest status
 
-`toolwall` is alpha. The published failure suite blocks **24 of 24 attack cases across
-9 classes with 0 false blocks** on clean traffic, at sub-millisecond overhead. Secret
+`toolwall` is alpha. The published failure suite blocks **25 of 25 attack cases across
+10 classes with 0 false blocks** on clean traffic, at sub-millisecond overhead. Secret
 detection is pattern + entropy based and is **never 100%**. Structureless passwords are
 out of scope, and the suite report states exactly what is and is not proven. Every claim
 about toolwall cites that report, nothing broader.

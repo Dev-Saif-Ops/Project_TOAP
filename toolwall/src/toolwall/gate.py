@@ -55,7 +55,23 @@ class ToolRegistry:
         *,
         policy: Policy | None = None,
         infer_schema: bool = False,
+        replace: bool = False,
     ) -> None:
+        """Register a tool. This registry IS the allowlist.
+
+        Re-registering an existing name raises unless replace=True, so a stray
+        second registration cannot silently swap out a tool (or drop its policy)
+        behind an already-audited allowlist.
+        """
+        if name in self._tools and not replace:
+            raise ValueError(
+                f"tool {name!r} is already registered; pass replace=True to override it "
+                "(re-registering silently would change what the allowlist permits)"
+            )
+        # A replace is a full re-registration: drop the old schema/policy so a
+        # new tool can never inherit constraints written for the previous one.
+        self._schemas.pop(name, None)
+        self._policies.pop(name, None)
         self._tools[name] = fn
         if schema is not None:
             self._schemas[name] = schema
@@ -151,8 +167,11 @@ class Gate:
         *,
         policy: Policy | None = None,
         infer_schema: bool = False,
+        replace: bool = False,
     ) -> None:
-        self.registry.register(name, fn, schema, policy=policy, infer_schema=infer_schema)
+        self.registry.register(
+            name, fn, schema, policy=policy, infer_schema=infer_schema, replace=replace
+        )
 
     # -- budget ---------------------------------------------------------------
 
@@ -308,6 +327,7 @@ class Gate:
             try:
                 result.return_value = tool(**result.call.args)
                 result.executed = True
+                self._scan_output(result)
             except Exception as exc:
                 result.error = f"{type(exc).__name__}: {exc}"
         if self.meter is not None:
@@ -321,6 +341,36 @@ class Gate:
                 )
             )
         return result
+
+    def _scan_output(self, result: GateResult) -> None:
+        """Scan what a tool returned before it travels back to the model.
+
+        A tool can read a secret out of a database, a file, or an API response.
+        Blocking it on the way in does nothing for that path, so the return value
+        gets the same shield treatment: redact substitutes placeholders, block
+        drops the value and marks the result, warn only records findings.
+        """
+        if self.shield is None or not getattr(self.shield, "scan_output", False):
+            return
+        value = result.return_value
+        if value is None:
+            return
+        payload = value if isinstance(value, dict) else {"return_value": value}
+        if self.shield.mode == "redact":
+            cleaned, findings = self.shield.redact_args(payload)
+            if findings:
+                result.return_value = cleaned if isinstance(value, dict) else cleaned["return_value"]
+        else:
+            findings = self.shield.scan_args(payload)
+            if findings and self.shield.mode == "block":
+                result.return_value = None
+                result.error = (
+                    f"tool output withheld: secret detected ({findings[0].kind}) "
+                    f"in {findings[0].arg!r}"
+                )
+        for f in findings:
+            f.arg = f"return.{f.arg}" if f.arg else "return"
+        result.findings.extend(findings)
 
     def _resolve_approval(self, result: GateResult) -> GateResult:
         """Called by run/run_all on NEEDS_APPROVAL. Fail closed without a handler."""

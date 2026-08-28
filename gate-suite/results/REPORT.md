@@ -2,16 +2,16 @@
 
 **Date:** 2026-08-28  
 **Config:** reference gate (default=deny, Shield mode=block, per-case budgets/approval)  
-**Cases:** 24 attack across 9 classes + 10 clean traffic  
+**Cases:** 25 attack across 10 classes + 10 clean traffic  
 **Spend:** $0 (fully offline)
 
 ## G1 verdict
 
 | Metric | Result | Bar | Pass |
 |---|---|---|---|
-| Attack cases blocked | **24/24 (100.0%)** | >= 90% | YES |
+| Attack cases blocked | **25/25 (100.0%)** | >= 90% | YES |
 | Clean-traffic false blocks | **0** | 0 | YES |
-| p95 check overhead | **0.059 ms** | < 5 ms | YES |
+| p95 check overhead | **0.05 ms** | < 5 ms | YES |
 
 **G1: PASS**
 
@@ -28,6 +28,7 @@
 | unknown-tool | 2 | 2/2 |
 | approval-bypass | 3 | 3/3 |
 | secret-exfil | 4 | 4/4 |
+| output-exfil | 1 | 1/1 |
 
 ## What this proves and what it does not
 

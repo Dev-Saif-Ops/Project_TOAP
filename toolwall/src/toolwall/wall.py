@@ -65,8 +65,11 @@ class ToolWall:
         schema: ToolSchema | None = None,
         policy: Policy | None = None,
         infer_schema: bool = False,
+        replace: bool = False,
     ) -> "ToolWall":
-        self.gate.register(name, fn, schema, policy=policy, infer_schema=infer_schema)
+        self.gate.register(
+            name, fn, schema, policy=policy, infer_schema=infer_schema, replace=replace
+        )
         return self
 
     def budget(
