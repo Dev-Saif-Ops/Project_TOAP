@@ -19,6 +19,7 @@ from callgate.policy import (
 )
 from callgate.schema import ToolSchema, schema_from_signature
 from callgate.shield import Finding, Shield
+from callgate.suggest import suggest_policies
 
 __version__ = "0.2.0.dev0"
 
@@ -46,5 +47,6 @@ __all__ = [
     "schema_from_signature",
     "Shield",
     "Finding",
+    "suggest_policies",
     "__version__",
 ]

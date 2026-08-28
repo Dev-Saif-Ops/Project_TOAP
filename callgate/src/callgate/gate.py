@@ -85,6 +85,7 @@ class GateResult:
     return_value: Any = None
     error: str | None = None
     findings: list[Finding] = field(default_factory=list)  # shield hits (value-free)
+    dry_run: bool = False  # True when the gate simulated execution
 
     @property
     def allowed(self) -> bool:
@@ -110,6 +111,7 @@ class Gate:
         meter: Meter | None = None,
         shield: Shield | None = None,
         approval: ApprovalHandler | None = None,
+        dry_run: bool = False,
         lane: str = "gate",
     ):
         if default not in ("deny", "allow"):
@@ -119,7 +121,9 @@ class Gate:
         self.meter = meter
         self.shield = shield
         self.approval = approval
+        self.dry_run = dry_run
         self.lane = lane
+        self.history: list[GateResult] = []  # every checked result, for reports/suggest
         self._budget: dict[str, Any] = {}
         self._executed_calls = 0
         self._executed_per_tool: dict[str, int] = {}
@@ -250,6 +254,19 @@ class Gate:
         self._executed_per_tool[result.call.name] = (
             self._executed_per_tool.get(result.call.name, 0) + 1
         )
+        if self.dry_run:
+            result.dry_run = True
+            if self.meter is not None:
+                self.meter.record(
+                    RunEvent(
+                        lane=self.lane,
+                        kind="tool",
+                        ok=True,
+                        namespace=result.call.name,
+                        meta={"dry_run": True, "would_execute": True},
+                    )
+                )
+            return result
         tool = self.registry.get(result.call.name)
         if tool is None:  # registry mutated between check and execute
             result.error = f"unknown tool at execute time: {result.call.name!r}"
@@ -305,9 +322,37 @@ class Gate:
             out.append(self.execute(result) if result.allowed else result)
         return out
 
+    # -- reporting ----------------------------------------------------------------
+
+    def report(self) -> dict[str, Any]:
+        """Summary of everything this gate has seen. Useful after a dry run."""
+        by_verdict: dict[str, int] = {}
+        by_tool: dict[str, dict[str, int]] = {}
+        blocked_reasons: list[str] = []
+        finding_kinds: dict[str, int] = {}
+        for r in self.history:
+            by_verdict[r.verdict.value] = by_verdict.get(r.verdict.value, 0) + 1
+            name = r.call.name if r.call else "(unparsed)"
+            tool_row = by_tool.setdefault(name, {"allow": 0, "block": 0, "needs_approval": 0})
+            tool_row[r.verdict.value] = tool_row.get(r.verdict.value, 0) + 1
+            if r.verdict is Verdict.BLOCK and r.reasons:
+                blocked_reasons.append(f"{name}: {r.reasons[0]}")
+            for f in r.findings:
+                finding_kinds[f.kind] = finding_kinds.get(f.kind, 0) + 1
+        return {
+            "dry_run": self.dry_run,
+            "calls_checked": len(self.history),
+            "verdicts": by_verdict,
+            "would_execute" if self.dry_run else "executed": self._executed_calls,
+            "by_tool": by_tool,
+            "blocked_reasons": blocked_reasons,
+            "secret_findings_by_kind": finding_kinds,
+        }
+
     # -- internals -------------------------------------------------------------------
 
     def _record(self, result: GateResult) -> GateResult:
+        self.history.append(result)
         if self.meter is not None:
             self.meter.record_intercept(
                 lane=self.lane,

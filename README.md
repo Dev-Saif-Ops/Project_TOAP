@@ -63,7 +63,18 @@ what is and is not proven.
 Try it without an API key:
 
 ```bash
-cd callgate && pip install -e . && python examples/quickstart.py
+cd callgate && pip install -e .
+python examples/quickstart.py             # 6 gated scenarios
+python examples/dangerous_agent_demo.py   # off-the-rails agent, with vs without the gate
+```
+
+### Dry-run: see what your agent would do, before it does anything
+
+```python
+gate = Gate(default="deny", dry_run=True, meter=Meter())
+# ... run your agent; ALLOW calls are simulated, never executed ...
+print(gate.report())                 # verdict counts, blocked reasons, secrets caught
+print(suggest_policies(gate))        # draft schema+policy from what was observed, for you to review
 ```
 
 ## Roadmap (Phase 0 → 1)
@@ -73,7 +84,8 @@ cd callgate && pip install -e . && python examples/quickstart.py
 - [x] Policy engine: value constraints, cross-arg rules, approval flags, budget caps
 - [x] Shield: secret detection/redaction on tool args and text (registration is the allowlist)
 - [x] Failure-scenario suite: 24 attacks across 9 classes, report published per release
-- [ ] Dry-run mode: full agent run, zero execution, "would-have-done" report
+- [x] Dry-run mode: full agent run, zero execution, `gate.report()` "would-have-done" summary
+- [x] Suggested-policy generator: observed calls -> reviewable draft schema + policy
 - [ ] `callgate-mcp`: guard proxy wrapping any MCP server
 - [ ] PyPI release
 

@@ -34,10 +34,24 @@ Full postmortem: `toap-v0.1-archive` branch README.
 - `gate-suite/`: 24 attack cases across 9 classes + 10 clean cases; G1 result: 24/24 blocked, 0 false blocks, p95 0.07 ms (`gate-suite/results/REPORT.md`)
 - Test suite grown to 70 tests
 
+### Added (phase1-dryrun cycle, same day)
+- Dry-run mode: `Gate(dry_run=True)` simulates ALLOW calls (budget still enforced), never executes; `GateResult.dry_run` flag
+- `gate.report()`: verdict counts, per-tool table, blocked reasons, secret findings by kind
+- `suggest.py`: `suggest_policies(gate)` turns observed calls into a reviewable draft of `register()` calls (schema required/types, `in_range` from observed numerics, `one_of` from small string sets)
+- `examples/dangerous_agent_demo.py`: same six off-the-rails tool calls replayed ungated (table wiped, secret emailed, unauthorized deploy) vs gated (1 allowed, 5 blocked, world untouched)
+- Test suite grown to 76 tests
+
+### Added (phase1-dryrun cycle, same day)
+- Dry-run mode: `Gate(dry_run=True)` simulates execution for ALLOW verdicts; blocks still block; `GateResult.dry_run` marks simulated steps
+- `Gate.history` + `Gate.report()`: verdict counts, per-tool breakdown, blocked reasons, secret-finding kinds (value-free)
+- `suggest.py` `suggest_policies()`: turns observed calls into a reviewable draft of `register()` + `ToolSchema` + `Policy` (ranges/enums from observed values; every line flagged for human review)
+- `examples/dangerous_agent_demo.py`: an off-the-rails agent replayed with vs without the gate (defensive demonstration; no real side effects)
+- Tests grown to 76
+
 ### Pending (next cycles, per plan.md)
-- Dry-run mode + suggested-policy generator
 - `callgate-mcp` guard proxy
 - PyPI release
+- Approval CLI UX
 
 ## [0.1.0-alpha] - 2026-08-19 (TOAP, archived)
 
