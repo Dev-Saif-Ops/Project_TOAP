@@ -127,3 +127,33 @@ def test_sdk_object_via_model_dump():
     calls = parse_tool_calls(FakeSDKResponse())
     assert calls[0].name == "f"
     assert calls[0].args == {"a": 1}
+
+
+# --- regression: a non-string tool name must BLOCK, not crash the gate -------
+# Found by property-based fuzzing. Envelope extractors only checked truthiness,
+# so a dict/int/list name reached the registry lookup and raised TypeError,
+# which escaped the gate instead of becoming a verdict.
+
+@pytest.mark.parametrize("bad_name", [{"a": 1}, ["x"], 42, None, "", "   ", 3.5])
+def test_non_string_tool_name_raises_intake_error(bad_name):
+    shapes = [
+        {"content": [{"type": "tool_use", "id": "1", "name": bad_name, "input": {}}]},
+        {"candidates": [{"content": {"parts": [{"functionCall": {"name": bad_name, "args": {}}}]}}]},
+        {"choices": [{"message": {"tool_calls": [{"id": "1", "function": {"name": bad_name, "arguments": "{}"}}]}}]},
+        {"output": [{"type": "function_call", "call_id": "1", "name": bad_name, "arguments": "{}"}]},
+    ]
+    for payload in shapes:
+        with pytest.raises(IntakeError):
+            parse_tool_calls(payload)
+
+
+def test_gate_turns_a_bad_name_into_a_block_not_an_exception():
+    from toolwall import Gate
+    gate = Gate(default="allow")
+    gate.register("real", lambda: "ran")
+    results = gate.check_all(
+        {"content": [{"type": "tool_use", "id": "1", "name": {"nope": 1}, "input": {}}]}
+    )
+    assert len(results) == 1
+    assert results[0].blocked
+    assert "intake" in results[0].reasons[0]

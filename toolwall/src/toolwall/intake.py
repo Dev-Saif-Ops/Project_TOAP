@@ -62,6 +62,19 @@ def _parse_args(value: Any) -> dict[str, Any]:
     return value
 
 
+def _require_name(value: Any, where: str) -> str:
+    """A tool name must be a non-empty string.
+
+    Providers hand us whatever the model produced. A non-string name (a dict, a
+    number, a list) used to reach the registry lookup and raise TypeError there,
+    which escapes the gate instead of becoming a BLOCK. Reject it at intake so
+    the failure stays fail-closed.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise IntakeError(f"{where}: tool name must be a non-empty string, got {type(value).__name__}")
+    return value
+
+
 def _from_openai_chat(data: dict) -> list[ToolCall] | None:
     choices = data.get("choices")
     if not isinstance(choices, list):
@@ -71,9 +84,7 @@ def _from_openai_chat(data: dict) -> list[ToolCall] | None:
         message = (choice or {}).get("message") or {}
         for tc in message.get("tool_calls") or []:
             fn = tc.get("function") or {}
-            name = fn.get("name")
-            if not name:
-                raise IntakeError("OpenAI tool_call missing function.name")
+            name = _require_name(fn.get("name"), "OpenAI tool_call function.name")
             calls.append(
                 ToolCall(name=name, args=_parse_args(fn.get("arguments")), id=tc.get("id"), source="openai-chat")
             )
@@ -87,9 +98,7 @@ def _from_openai_responses(data: dict) -> list[ToolCall] | None:
     calls: list[ToolCall] = []
     for item in output:
         if isinstance(item, dict) and item.get("type") == "function_call":
-            name = item.get("name")
-            if not name:
-                raise IntakeError("OpenAI responses function_call missing name")
+            name = _require_name(item.get("name"), "OpenAI responses function_call name")
             calls.append(
                 ToolCall(
                     name=name,
@@ -108,9 +117,7 @@ def _from_anthropic(data: dict) -> list[ToolCall] | None:
     calls: list[ToolCall] = []
     for block in content:
         if isinstance(block, dict) and block.get("type") == "tool_use":
-            name = block.get("name")
-            if not name:
-                raise IntakeError("Anthropic tool_use block missing name")
+            name = _require_name(block.get("name"), "Anthropic tool_use block name")
             calls.append(
                 ToolCall(name=name, args=_parse_args(block.get("input")), id=block.get("id"), source="anthropic")
             )
@@ -129,9 +136,7 @@ def _from_gemini(data: dict) -> list[ToolCall] | None:
                 continue
             fc = part.get("functionCall") or part.get("function_call")
             if fc:
-                name = fc.get("name")
-                if not name:
-                    raise IntakeError("Gemini functionCall missing name")
+                name = _require_name(fc.get("name"), "Gemini functionCall name")
                 calls.append(ToolCall(name=name, args=_parse_args(fc.get("args")), source="gemini"))
     return calls
 

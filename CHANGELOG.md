@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.2] - 2026-08-29
+
+### Fixed
+- **A non-string tool name crashed the gate instead of blocking (security).** Every
+  provider envelope extractor validated the tool name by truthiness only, so a name
+  that was a dict, list, or number reached the registry lookup and raised
+  `TypeError` *out of* the gate. A crash is not a verdict: the exception escapes and
+  the caller's error handling decides what happens, which is not fail-closed. Tool
+  names are now validated at intake; a bad name is an `IntakeError`, which the gate
+  already turns into a BLOCK. Found by the new fuzz suite on its first run.
+
+### Added
+- **Property-based fuzzing of the core invariant** (`tests/test_invariant_fuzz.py`):
+  2000 generated payloads per shield mode asserting that a non-ALLOW verdict never
+  results in the tool running. Generators cover nested structures, empty values,
+  huge ints, NaN/inf, unicode and homoglyphs, unserializable objects, wrong types,
+  all four provider shapes, and lookalike tool names. Fixed seed, stdlib only, no
+  new test dependency. Also asserts budgets hold under arbitrary payload streams
+  with approvals always granted, that dry-run executes nothing, and that NaN/inf
+  cannot read as "in range".
+- Tests grown to 125.
+
 ## [0.3.1] - 2026-08-28
 
 ### Fixed

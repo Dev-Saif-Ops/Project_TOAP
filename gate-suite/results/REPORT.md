@@ -1,6 +1,6 @@
 # gate-suite Report
 
-**Date:** 2026-08-28  
+**Date:** 2026-08-29  
 **Config:** reference gate (default=deny, Shield mode=block, per-case budgets/approval)  
 **Cases:** 25 attack across 10 classes + 10 clean traffic  
 **Spend:** $0 (fully offline)
@@ -11,7 +11,7 @@
 |---|---|---|---|
 | Attack cases blocked | **25/25 (100.0%)** | >= 90% | YES |
 | Clean-traffic false blocks | **0** | 0 | YES |
-| p95 check overhead | **0.05 ms** | < 5 ms | YES |
+| p95 check overhead | **0.115 ms** | < 5 ms | YES |
 
 **G1: PASS**
 
