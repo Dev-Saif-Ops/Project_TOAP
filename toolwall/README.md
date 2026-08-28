@@ -89,6 +89,21 @@ Everything not explicitly allowed is blocked. That is the whole idea.
 - **MCP guard**: `MCPGuard` puts the same gate in front of any MCP server.
 - **Audit trail**: every verdict exported to JSON/CSV.
 
+## Why not just the guardrails in my agent framework?
+
+Use those too. Two things make `toolwall` different from security bundled into one
+workspace or framework:
+
+- **It's an allowlist, not a blocklist.** Bundled protections usually ship a list of
+  dangerous patterns to deny, so anything the authors did not anticipate gets through.
+  Here, registration *is* the allowlist: everything not explicitly allowed is blocked.
+- **It runs inside your agent, not instead of it.** A workspace's built-in security
+  protects that workspace. `toolwall` is a zero-dependency library that drops into the
+  agent you already have, on any framework, and speaks OpenAI, Anthropic, Gemini, and MCP.
+
+It is **not** a sandbox. A sandbox isolates the process; `toolwall` authorizes the call.
+Production setups want both.
+
 ## Dry-run first
 
 ```python

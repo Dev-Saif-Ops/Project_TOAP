@@ -112,6 +112,26 @@ with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
 Secret detection is pattern + entropy based and is never 100%; the report states exactly
 what is and is not proven. **Try to break it. Issues and PRs welcome.**
 
+## Why not just use the guardrails in my agent framework?
+
+Use them too. But two things make toolwall different from a security layer bundled
+into one workspace or framework:
+
+**It's an allowlist, not a blocklist.** Most bundled protections ship a list of
+dangerous patterns to deny. Anything the authors did not anticipate gets through.
+toolwall inverts that: registration *is* the allowlist, and everything not explicitly
+allowed is blocked. You cannot forget to deny an attack you never thought of.
+
+**It runs inside your agent, not instead of it.** A workspace's built-in security
+protects that workspace. If your agent is built on LangGraph, the OpenAI SDK, CrewAI,
+or plain Python, you cannot borrow it without adopting the whole product. toolwall is
+a zero-dependency library that drops into the agent you already have, on any framework,
+and speaks OpenAI, Anthropic, Gemini, and MCP.
+
+And what toolwall is **not**: it is not a sandbox. A sandbox isolates the *process*;
+toolwall authorizes the *call*. They solve different layers, and a serious production
+setup wants both, alongside least privilege and network policy.
+
 ## How to use
 
 ### 1. Install
