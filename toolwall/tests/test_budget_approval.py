@@ -102,3 +102,37 @@ def test_policy_violation_beats_approval():
     result = gate.run({"name": "delete_records", "args": {"filter": {}}})
     assert result.verdict is Verdict.BLOCK
     assert not result.executed
+
+
+# --- regression: budget must hold across parallel calls in one payload -------
+# Reported by a reviewer: check_all() evaluated every call before any executed,
+# so N parallel calls all saw counter=0 and all passed a max_calls=1 budget.
+
+def parallel_payload(*names):
+    return {"content": [{"type": "tool_use", "id": str(i), "name": n, "input": {}}
+                        for i, n in enumerate(names)]}
+
+
+def test_budget_holds_across_parallel_calls_in_one_payload():
+    executed = []
+    gate = Gate(default="allow")
+    for n in ("a", "b", "c"):
+        gate.register(n, lambda n=n: executed.append(n))
+    gate.budget(max_calls=1)
+
+    results = gate.run_all(parallel_payload("a", "b", "c"))
+
+    assert executed == ["a"], f"budget bypassed: {executed}"
+    assert [r.verdict for r in results] == [Verdict.ALLOW, Verdict.BLOCK, Verdict.BLOCK]
+    assert "budget exceeded" in results[1].reasons[0]
+
+
+def test_per_tool_budget_holds_across_parallel_calls():
+    executed = []
+    gate = Gate(default="allow")
+    gate.register("a", lambda: executed.append("a"))
+    gate.budget(max_calls_per_tool=2)
+
+    gate.run_all(parallel_payload("a", "a", "a", "a"))
+
+    assert executed == ["a", "a"], f"per-tool budget bypassed: {executed}"

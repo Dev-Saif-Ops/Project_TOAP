@@ -13,6 +13,7 @@ Check order (first failure blocks, fail-closed):
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -137,6 +138,7 @@ class Gate:
         self.dry_run = dry_run
         self.lane = lane
         self.history: list[GateResult] = []  # every checked result, for reports/suggest
+        self._lock = threading.Lock()
         self._budget: dict[str, Any] = {}
         self._executed_calls = 0
         self._executed_per_tool: dict[str, int] = {}
@@ -170,8 +172,19 @@ class Gate:
         }
 
     def _budget_violation(self, call: ToolCall) -> str | None:
+        """Read budget counters under the lock.
+
+        Note: this reads state; the increment happens in execute(). A Gate is
+        intended for one agent run. Under heavy concurrent use on a shared Gate,
+        counters stay consistent but a check/execute race can still admit an
+        extra call. Use one Gate per agent execution context.
+        """
         if not self._budget:
             return None
+        with self._lock:
+            return self._budget_violation_locked(call)
+
+    def _budget_violation_locked(self, call: ToolCall) -> str | None:
         max_calls = self._budget.get("max_calls")
         if max_calls is not None and self._executed_calls >= max_calls:
             return f"budget exceeded: max_calls={max_calls} already executed"
@@ -188,6 +201,13 @@ class Gate:
     # -- checking ---------------------------------------------------------------
 
     def check_all(self, payload: Any) -> list[GateResult]:
+        """Check every tool call in a payload without executing anything.
+
+        Budget caution: all calls are checked against the *current* counters, so
+        with N parallel calls every one of them sees the same budget state. If
+        you then execute them yourself, you can exceed a budget. Use run_all(),
+        which checks and executes one call at a time so counters advance.
+        """
         try:
             calls = parse_tool_calls(payload)
         except IntakeError as exc:
@@ -263,10 +283,11 @@ class Gate:
         if not result.allowed or result.call is None:
             joined = "; ".join(result.reasons) or "no call"
             raise PermissionError(f"refusing to execute a {result.verdict.value} result: {joined}")
-        self._executed_calls += 1
-        self._executed_per_tool[result.call.name] = (
-            self._executed_per_tool.get(result.call.name, 0) + 1
-        )
+        with self._lock:
+            self._executed_calls += 1
+            self._executed_per_tool[result.call.name] = (
+                self._executed_per_tool.get(result.call.name, 0) + 1
+            )
         if self.dry_run:
             result.dry_run = True
             if self.meter is not None:
@@ -328,8 +349,19 @@ class Gate:
         return result
 
     def run_all(self, payload: Any) -> list[GateResult]:
+        # Check and execute each call in sequence, not check-all-then-execute-all.
+        # Executing one call increments budget counters, so the next call's check
+        # sees the updated state. Otherwise N parallel calls all pass a budget of
+        # max_calls=1 (checked at counter 0) and then all execute.
+        try:
+            calls = parse_tool_calls(payload)
+        except IntakeError as exc:
+            return [self._record(GateResult(Verdict.BLOCK, reasons=[f"intake: {exc}"]))]
+        if not calls:
+            return [self._record(GateResult(Verdict.BLOCK, reasons=["intake: no tool calls in payload"]))]
         out: list[GateResult] = []
-        for result in self.check_all(payload):
+        for call in calls:
+            result = self._check_one(call)
             if result.verdict is Verdict.NEEDS_APPROVAL:
                 result = self._resolve_approval(result)
             out.append(self.execute(result) if result.allowed else result)

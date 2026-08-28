@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.1] - 2026-08-28
+
+### Fixed
+- **Budget bypass with parallel tool calls (security).** `run_all()` checked every
+  call in a payload before executing any of them, so N parallel calls all saw the
+  same budget counters and all passed. A `max_calls=1` budget could execute 3 calls.
+  `run_all()` now checks and executes one call at a time, so counters advance
+  between calls. Regression tests added for both `max_calls` and
+  `max_calls_per_tool`. Reported by a reviewer; confirmed and fixed same day.
+- Budget counter reads and writes are now guarded by a lock. A `Gate` is still
+  intended for one agent execution context; `check_all()` documents that checking
+  many calls without executing them does not advance budget state.
+
 ## [0.3.0] - 2026-08-28
 
 ### Added

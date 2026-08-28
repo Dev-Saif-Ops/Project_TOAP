@@ -23,7 +23,7 @@ from toolwall.shield import Finding, Shield
 from toolwall.suggest import suggest_policies
 from toolwall.mcp_guard import GuardedCall, MCPGuard, to_mcp_error
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 __all__ = [
     "ToolWall",
