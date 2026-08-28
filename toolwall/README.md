@@ -2,8 +2,8 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/toolwall.svg)](https://pypi.org/project/toolwall/)
 [![Python versions](https://img.shields.io/pypi/pyversions/toolwall.svg)](https://pypi.org/project/toolwall/)
-[![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](https://github.com/Dev-Saif-Ops/Project_TOAP/blob/main/toolwall/LICENSE)
-[![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](https://github.com/Dev-Saif-Ops/Project_TOAP)
+[![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](https://github.com/Dev-Saif-Ops/toolwall/blob/main/toolwall/LICENSE)
+[![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](https://github.com/Dev-Saif-Ops/toolwall)
 
 **A fail-closed firewall for AI agent tool calls.**
 
@@ -56,18 +56,18 @@ result = gate.run(openai_response)   # any provider shape, or a plain dict
 
 ## What it does
 
-- **Fail-closed gate** — unknown tool, schema violation, policy violation, budget hit,
+- **Fail-closed gate**: unknown tool, schema violation, policy violation, budget hit,
   or unparseable payload all block *before* the tool runs. Registration is the allowlist.
-- **Policy engine** — value constraints (`in_range`, `one_of`, `matches`, `ends_with`…),
+- **Policy engine**: value constraints (`in_range`, `one_of`, `matches`, `ends_with`…),
   cross-argument rules, human-approval flags, and budget caps (calls / per-tool / USD).
-- **Shield** — detects secrets (AWS, OpenAI, GitHub, Stripe, Slack, JWT, PEM, and
+- **Shield**: detects secrets (AWS, OpenAI, GitHub, Stripe, Slack, JWT, PEM, and
   high-entropy strings) in tool arguments and blocks or redacts them. The audit log
   never contains the secret value.
-- **Dry-run** — run your whole agent with `dry_run=True`: nothing executes, and
+- **Dry-run**: run your whole agent with `dry_run=True`: nothing executes, and
   `gate.report()` tells you what it *would* have done. `suggest_policies(gate)` drafts
   a starter policy from the calls it observed.
-- **MCP guard** — `MCPGuard` puts the same gate in front of any MCP server.
-- **Audit trail** — every verdict exported to JSON/CSV.
+- **MCP guard**: `MCPGuard` puts the same gate in front of any MCP server.
+- **Audit trail**: every verdict exported to JSON/CSV.
 
 ## Dry-run first
 
@@ -95,15 +95,15 @@ Install the transport extra with `pip install "toolwall[mcp]"`.
 
 `toolwall` is alpha. The published failure suite blocks **24 of 24 attack cases across
 9 classes with 0 false blocks** on clean traffic, at sub-millisecond overhead. Secret
-detection is pattern + entropy based and is **never 100%** — structureless passwords are
+detection is pattern + entropy based and is **never 100%**. Structureless passwords are
 out of scope, and the suite report states exactly what is and is not proven. Every claim
 about toolwall cites that report, nothing broader.
 
 ## Links
 
-- **Source, full docs, and the failure suite:** https://github.com/Dev-Saif-Ops/Project_TOAP
+- **Source, full docs, and the failure suite:** https://github.com/Dev-Saif-Ops/toolwall
 - **What happened to TOAP** (this project's predecessor, an honest postmortem):
-  the [`toap-v0.1-archive`](https://github.com/Dev-Saif-Ops/Project_TOAP/tree/toap-v0.1-archive) branch
+  the [`toap-v0.1-archive`](https://github.com/Dev-Saif-Ops/toolwall/tree/toap-v0.1-archive) branch
 
 ## License
 

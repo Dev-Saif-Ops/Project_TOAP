@@ -119,7 +119,7 @@ See `examples/mcp_guard_demo.py`. Install the transport extra with `pip install 
 
 ## What happened to TOAP?
 
-This repo used to be **TOAP**, a token-compression DSL for tool calls. We measured it honestly and killed it. The full postmortem (real numbers, tokenizer analysis, lessons) is on the [`toap-v0.1-archive`](https://github.com/Dev-Saif-Ops/Project_TOAP/tree/toap-v0.1-archive) branch. toolwall keeps the part of TOAP that was never about compression: the fail-closed checkpoint between the model and your tools.
+This repo used to be **TOAP**, a token-compression DSL for tool calls. We measured it honestly and killed it. The full postmortem (real numbers, tokenizer analysis, lessons) is on the [`toap-v0.1-archive`](https://github.com/Dev-Saif-Ops/toolwall/tree/toap-v0.1-archive) branch. toolwall keeps the part of TOAP that was never about compression: the fail-closed checkpoint between the model and your tools.
 
 ## License
 
