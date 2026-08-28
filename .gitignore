@@ -42,3 +42,6 @@ toap_executive_pitch.pdf
 .DS_Store
 Thumbs.db
 live_audit.*
+audit.json
+audit.csv
+toolwall/audit.*
