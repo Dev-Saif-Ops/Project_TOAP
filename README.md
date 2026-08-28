@@ -60,10 +60,16 @@ with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
 Detection is pattern + entropy based and is never 100%; the report states exactly
 what is and is not proven.
 
-Try it without an API key:
+Install:
 
 ```bash
-cd toolwall && pip install -e .
+pip install toolwall
+```
+
+Try it without an API key (from a clone):
+
+```bash
+cd toolwall
 python examples/quickstart.py             # 6 gated scenarios
 python examples/dangerous_agent_demo.py   # off-the-rails agent, with vs without the gate
 ```
@@ -98,7 +104,7 @@ See `examples/mcp_guard_demo.py`. Install the transport extra with `pip install 
 - [x] Suggested-policy generator: observed calls -> reviewable draft schema + policy
 - [x] `toolwall-mcp`: `MCPGuard` puts the gate in front of any MCP server (tested core; stdio wiring lands with first pilot)
 - [x] Release-ready: builds clean, `twine check` passes, clean-install verified ([RELEASING.md](toolwall/RELEASING.md))
-- [ ] PyPI publish (manual, owner-run)
+- [x] **Published to PyPI** — [`pip install toolwall`](https://pypi.org/project/toolwall/)
 
 ## What happened to TOAP?
 
