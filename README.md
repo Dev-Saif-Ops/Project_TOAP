@@ -1,9 +1,20 @@
 # toolwall
 
+[![PyPI version](https://img.shields.io/pypi/v/toolwall.svg)](https://pypi.org/project/toolwall/)
+[![Python versions](https://img.shields.io/pypi/pyversions/toolwall.svg)](https://pypi.org/project/toolwall/)
+[![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](toolwall/LICENSE)
+[![Tests](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](toolwall/tests)
+[![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](toolwall/pyproject.toml)
+[![Failure suite](https://img.shields.io/badge/attack%20suite-24%2F24%20blocked-brightgreen.svg)](gate-suite/results/REPORT.md)
+
 > **Fail-closed firewall for AI agent tool calls.**
 > Structured outputs guarantee your agent's tool calls are *well-formed*. toolwall guarantees they're *allowed*.
 
-**Status: v0.2.0 (alpha). Phase 0 + Phase 1 complete. 85 tests, published failure suite.**
+**Status: v0.2.1 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · Phase 0 + Phase 1 complete · 85 tests · published failure suite.**
+
+```bash
+pip install toolwall
+```
 
 ---
 
