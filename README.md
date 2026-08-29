@@ -11,7 +11,7 @@
 >
 > Your LLM can generate a **valid** tool call. That doesn't mean it's **safe** to execute.
 
-**Status: v0.3.2 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 149 tests · published attack suite.**
+**Status: v0.3.2 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 152 tests · published attack suite.**
 
 ```bash
 pip install toolwall
@@ -213,7 +213,7 @@ Run the tests and the published attack suite yourself:
 
 ```bash
 cd toolwall && pip install -e ".[dev]"
-pytest                                    # 149 tests
+pytest                                    # 152 tests
 python ../gate-suite/run_suite.py         # 28/28 attacks blocked, prints the G1 report
 ```
 

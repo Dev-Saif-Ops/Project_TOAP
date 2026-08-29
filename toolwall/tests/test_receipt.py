@@ -207,3 +207,73 @@ def test_unreceipted_tools_are_documented_as_replayable():
     gate.execute(r)
     gate.execute(r)
     assert len(ran) == 2  # known limitation of the explicit opt-out
+
+
+# --- common stdlib value types must not be false-blocked ------------------------
+
+def test_common_value_types_are_fingerprintable():
+    """datetime, date, time, Decimal, UUID and Enum are ordinary tool arguments.
+
+    Blocking them would be a false block caused by the canonicaliser being
+    unfinished, not by anything being unsafe. Found by probing with realistic
+    args (a booking date, a Decimal price) rather than the suite's plain types.
+    """
+    import datetime as dt
+    import enum
+    import uuid
+    from decimal import Decimal
+
+    class Tier(enum.Enum):
+        FREE = "f"
+        PRO = "p"
+
+    gate = Gate(default="deny")
+    seen = []
+    gate.register("book", lambda **kw: seen.append(kw), schema=ToolSchema())
+
+    out = gate.run({
+        "name": "book",
+        "args": {
+            "when": dt.datetime(2026, 8, 29, 10, 30),
+            "day": dt.date(2026, 8, 29),
+            "at": dt.time(10, 30),
+            "price": Decimal("10.50"),
+            "ref": uuid.UUID("12345678-1234-5678-1234-567812345678"),
+            "tier": Tier.PRO,
+        },
+    })
+    assert out.allowed and out.executed
+
+
+def test_swapping_a_datetime_is_still_caught():
+    """The new types are tamper-checked like everything else, not exempted."""
+    import datetime as dt
+
+    gate = Gate(default="deny")
+    ran = []
+    gate.register("book", lambda when: ran.append(when), schema=ToolSchema(required=["when"]))
+
+    result = gate.check({"name": "book", "args": {"when": dt.datetime(2026, 8, 29)}})
+    result.call.args["when"] = dt.datetime(1999, 1, 1)
+
+    out = gate.execute(result)
+    assert ran == [] and out.blocked
+
+
+def test_new_types_cannot_collide_with_their_string_forms():
+    import datetime as dt
+    import enum
+    from decimal import Decimal
+
+    class Level(enum.IntEnum):
+        HIGH = 2
+
+    assert fingerprint("t", {"v": Decimal("10.50")}) != fingerprint("t", {"v": "10.50"})
+    assert fingerprint("t", {"v": dt.datetime(2026, 8, 29)}) != fingerprint(
+        "t", {"v": "2026-08-29T00:00:00"}
+    )
+    # IntEnum subclasses int; the member must not fingerprint as its value
+    assert fingerprint("t", {"v": Level.HIGH}) != fingerprint("t", {"v": 2})
+    # exponent is preserved: numerically equal Decimals may differ, which can only
+    # refuse a swap, never admit one
+    assert fingerprint("t", {"v": Decimal("10.50")}) != fingerprint("t", {"v": Decimal("10.5")})

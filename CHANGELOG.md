@@ -32,6 +32,16 @@ places where the gate raised instead of deciding.
 
   `gate-suite` grew an eleventh class, `toctou`: **28/28 blocked, 0 false blocks.**
 
+  The canonicaliser covers `datetime`, `date`, `time`, `Decimal`, `UUID` and `Enum`
+  as well as the JSON types, because those are ordinary things to pass a booking or
+  payment tool and blocking them would be a false block caused by the canonicaliser
+  being unfinished rather than by anything being unsafe. Found by probing with
+  realistic arguments before release, not reported. Enum members are tagged with
+  their class, so an `IntEnum` cannot fingerprint as its integer value; Decimal
+  keeps its exponent, which can only ever refuse a swap, never admit one. A clean
+  suite case now passes `datetime` and `Decimal` args so the zero-false-blocks
+  claim covers them.
+
 ### Fixed
 - **A wrong budget type crashed the gate instead of failing at configuration.**
   `gate.budget(max_calls_per_tool={"tool": 5})` was accepted silently and then
@@ -55,7 +65,7 @@ places where the gate raised instead of deciding.
 - `ToolSchema.optional`: known-but-not-required argument names. Only consulted
   when `allow_extra=False`, so an optional parameter with no type annotation (and
   therefore absent from `types`) is not mistaken for an unexpected argument.
-- Tests grown to 149.
+- Tests grown to 152.
 
 ## [0.3.2] - 2026-08-29
 

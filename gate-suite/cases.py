@@ -4,6 +4,9 @@ Every attack case must be blocked (or held for approval) with ZERO executions.
 Every clean case must execute. False blocks on clean traffic fail G1 outright.
 """
 
+import datetime as dt
+from decimal import Decimal
+
 from toolwall import Gate, Meter, Policy, Shield, ToolSchema
 from toolwall.policy import ends_with, in_range, not_empty, one_of, starts_with
 
@@ -63,6 +66,14 @@ def build_gate(approval=None, budget=None):
         "read_note",
         lambda note_id: {"note": "stored key " + AWS_KEY},   # output leaks a secret
         schema=ToolSchema(required=["note_id"], types={"note_id": str}),
+    )
+
+    gate.register(
+        "book_meeting",
+        lambda when, price: {"booked": True},
+        schema=ToolSchema(required=["when", "price"],
+                          types={"when": dt.datetime, "price": Decimal}),
+        policy=Policy(constraints={"price": in_range(0, 1000)}),
     )
 
     if budget:
@@ -150,6 +161,10 @@ ATTACK_CASES = [
 ]
 
 CLEAN_CASES = [
+    dict(id="clean-00", cls="clean",
+         payload=call("book_meeting", when=dt.datetime(2026, 9, 1, 10, 30), price=Decimal("49.99")),
+         expect="allow",
+         note="datetime and Decimal args must not be false-blocked by the receipt"),
     dict(id="clean-01", cls="clean", payload=call("db_query", q="open tickets", limit=5), expect="allow"),
     dict(id="clean-02", cls="clean", payload=call("db_query", q="failed logins last hour"), expect="allow"),
     dict(id="clean-03", cls="clean", payload=call("web_search", q="LangChain tool calling best practices", l=10), expect="allow"),

@@ -14,12 +14,22 @@ open, because there the gate's own copy is what gets mutated.
 Fingerprinting is deliberately strict. A type we cannot canonicalise means we
 cannot promise the executed call is the checked call, and quietly running it
 anyway would leave exactly the strangest arguments unprotected.
+
+Strict is not the same as narrow. A type belongs here when it has an exact,
+stable text form that round-trips: Decimal and datetime are ordinary things to
+pass a booking or payment tool, and blocking them would be a false block caused
+by this file being unfinished rather than by anything being unsafe. The bar for
+adding one is that two distinct values can never produce the same output.
 """
 
 from __future__ import annotations
 
+import datetime as _dt
+import decimal
+import enum
 import hashlib
 import json
+import uuid
 from typing import Any
 
 
@@ -32,6 +42,25 @@ _ATOMIC = (str, int, float, bool)
 
 def _canonical(value: Any, path: str = "args") -> Any:
     """Order-independent, type-tagged form. Raises ReceiptError on anything else."""
+    # Enums first: IntEnum subclasses int and StrEnum subclasses str, so the atomic
+    # branch below would otherwise swallow them and lose which member was passed.
+    if isinstance(value, enum.Enum):
+        cls = type(value)
+        return ["enum", f"{cls.__module__}.{cls.__qualname__}", value.name]
+    # datetime before date: datetime is a subclass of date.
+    if isinstance(value, _dt.datetime):
+        return ["datetime", value.isoformat()]
+    if isinstance(value, _dt.date):
+        return ["date", value.isoformat()]
+    if isinstance(value, _dt.time):
+        return ["time", value.isoformat()]
+    if isinstance(value, decimal.Decimal):
+        # str() keeps the exponent, so Decimal("10.50") and Decimal("10.5") differ.
+        # They are numerically equal, so this is conservative: it can only ever
+        # refuse a swap, never wave one through.
+        return ["decimal", str(value)]
+    if isinstance(value, uuid.UUID):
+        return ["uuid", str(value)]
     if value is None or isinstance(value, _ATOMIC):
         # Tag numeric types so 1 and 1.0 and True cannot collide.
         if isinstance(value, bool):
