@@ -1,4 +1,4 @@
-"""gate-suite: standard gate config + attack/clean cases across 9 classes.
+"""gate-suite: standard gate config + attack/clean cases across 10 classes.
 
 Every attack case must be blocked (or held for approval) with ZERO executions.
 Every clean case must execute. False blocks on clean traffic fail G1 outright.
