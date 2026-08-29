@@ -2,7 +2,7 @@
 
 import json
 
-from toolwall import Meter, ToolSchema, schema_from_signature
+from toolwall import Gate, Meter, ToolSchema, schema_from_signature
 from toolwall.cli import cmd_report
 
 
@@ -51,3 +51,49 @@ def test_cli_report(tmp_path, capsys):
     assert cmd_report(Args()) == 0
     out = capsys.readouterr().out
     assert "gate" in out and "intercept_success_rate" in out
+
+
+# --- inferred schemas reject unexpected args (fail closed, not TypeError) ------
+
+def test_inferred_schema_blocks_hallucinated_arg():
+    """An extra arg used to pass the schema and then raise TypeError inside the tool.
+
+    That surfaced as verdict=allow with executed=False and an error, which is not a
+    verdict about whether the call was permitted. The signature already says what the
+    callable accepts, so an unexpected arg is a clean BLOCK.
+    """
+    def search(query: str, limit: int = 10):
+        return {"rows": 1}
+
+    gate = Gate(default="deny")
+    gate.register("search", search, schema=schema_from_signature(search))
+
+    ok = gate.run({"name": "search", "args": {"query": "a", "limit": 5}})
+    assert ok.allowed and ok.executed
+
+    bad = gate.run({"name": "search", "args": {"query": "a", "sort_by": "date"}})
+    assert bad.blocked
+    assert not bad.executed
+    assert bad.error is None  # a verdict, not a crash
+    assert "sort_by" in bad.reasons[0]
+
+
+def test_inferred_schema_allows_optional_arg_without_annotation():
+    """An un-annotated optional param is a known arg, not an unexpected one."""
+    def fetch(url: str, retries=3):
+        return {"url": url, "retries": retries}
+
+    schema = schema_from_signature(fetch)
+    assert schema.allow_extra is False
+    assert "retries" not in schema.types  # no annotation to read
+    assert schema.validate({"url": "u", "retries": 5}) == []
+
+
+def test_inferred_schema_keeps_extras_open_for_var_kwargs():
+    """A callable declaring **kwargs really does accept args we cannot enumerate."""
+    def flexible(name: str, **kwargs):
+        return {"name": name}
+
+    schema = schema_from_signature(flexible)
+    assert schema.allow_extra is True
+    assert schema.validate({"name": "n", "anything": 1}) == []

@@ -1,5 +1,36 @@
 # Changelog
 
+## [Unreleased]
+
+Both items below came out of writing the onboarding docs: the path a first-time
+user actually walks turned out to hit two places where the gate raised instead of
+deciding.
+
+### Fixed
+- **A wrong budget type crashed the gate instead of failing at configuration.**
+  `gate.budget(max_calls_per_tool={"tool": 5})` was accepted silently and then
+  raised `TypeError` from inside `check()` on the next call, so the exception
+  escaped the gate rather than producing a verdict. `budget()` now validates its
+  arguments where the mistake is made, with an error that says budgets apply to
+  every tool. Negative values are rejected too. (Per-tool limits are a single cap
+  across all tools; a dict is not supported and now says so.)
+- **An inferred schema let a hallucinated argument through.**
+  `schema_from_signature()` set `allow_extra=True`, so an argument the model
+  invented passed the schema and then raised `TypeError` inside the tool. That
+  landed as `verdict=allow, executed=False, error=...`, which is not a statement
+  about whether the call was permitted. Inferred schemas now reject unexpected
+  arguments, because the signature already says exactly what the callable accepts.
+  A callable declaring `**kwargs` still allows extras, since it genuinely takes
+  arguments we cannot enumerate. This is a behaviour change for
+  `schema_from_signature()` and `register(..., infer_schema=True)`; a
+  hand-written `ToolSchema` is unaffected and still defaults to `allow_extra=True`.
+
+### Added
+- `ToolSchema.optional`: known-but-not-required argument names. Only consulted
+  when `allow_extra=False`, so an optional parameter with no type annotation (and
+  therefore absent from `types`) is not mistaken for an unexpected argument.
+- Tests grown to 130.
+
 ## [0.3.2] - 2026-08-29
 
 ### Fixed

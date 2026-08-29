@@ -184,6 +184,24 @@ class Gate:
     ) -> None:
         if max_usd is not None and self.meter is None:
             raise ValueError("max_usd budget requires a meter (cost is meter-derived)")
+        # Validate here, not at check time. A wrong type used to survive this call and
+        # surface later as a TypeError raised out of check(), and an exception escaping
+        # the gate is not a verdict: the caller's error handling decides what happens.
+        for field_name, value, kinds, label in (
+            ("max_calls", max_calls, (int,), "an int"),
+            ("max_calls_per_tool", max_calls_per_tool, (int,), "an int"),
+            ("max_usd", max_usd, (int, float), "a number"),
+        ):
+            if value is None:
+                continue
+            if isinstance(value, bool) or not isinstance(value, kinds):
+                raise TypeError(
+                    f"budget: {field_name} must be {label} or None, "
+                    f"got {type(value).__name__}. Budgets apply to every tool; "
+                    f"for per-tool limits use a separate Gate."
+                )
+            if value < 0:
+                raise ValueError(f"budget: {field_name} must not be negative, got {value!r}")
         self._budget = {
             "max_calls": max_calls,
             "max_calls_per_tool": max_calls_per_tool,

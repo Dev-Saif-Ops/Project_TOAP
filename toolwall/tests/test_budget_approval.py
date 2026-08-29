@@ -136,3 +136,42 @@ def test_per_tool_budget_holds_across_parallel_calls():
     gate.run_all(parallel_payload("a", "a", "a", "a"))
 
     assert executed == ["a", "a"], f"per-tool budget bypassed: {executed}"
+
+
+# --- budget config validation (a crash is not a verdict) -----------------------
+
+def test_budget_rejects_wrong_types_at_config_time():
+    """A bad budget type must fail at budget(), not as a TypeError out of check().
+
+    Regression: max_calls_per_tool={"tool": 5} was accepted here and later raised
+    TypeError from inside check(), so the exception escaped the gate instead of
+    producing a verdict.
+    """
+    gate = Gate(default="deny")
+    gate.register("t", lambda: "ok", schema=ToolSchema())
+
+    for bad in ({"t": 5}, "5", 1.5, [5]):
+        with pytest.raises(TypeError, match="max_calls_per_tool"):
+            gate.budget(max_calls_per_tool=bad)
+
+    with pytest.raises(TypeError, match="max_calls"):
+        gate.budget(max_calls={"t": 5})
+
+    # bools are ints in Python; a bool here is a mistake, not a limit
+    with pytest.raises(TypeError):
+        gate.budget(max_calls=True)
+
+    with pytest.raises(ValueError, match="negative"):
+        gate.budget(max_calls=-1)
+
+    # the gate still works after every rejected config
+    assert gate.run({"name": "t", "args": {}}).allowed
+
+
+def test_budget_accepts_valid_values():
+    gate = Gate(default="deny")
+    gate.register("t", lambda: "ok", schema=ToolSchema())
+    gate.budget(max_calls=3, max_calls_per_tool=2)
+    assert gate.run({"name": "t", "args": {}}).allowed
+    assert gate.run({"name": "t", "args": {}}).allowed
+    assert gate.run({"name": "t", "args": {}}).blocked  # per-tool cap of 2
