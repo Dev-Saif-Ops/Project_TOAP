@@ -1,10 +1,15 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - 2026-08-29
 
 One externally reported security fix, plus two defects found while writing the
 onboarding docs: walking the path a first-time user actually takes turned up two
 places where the gate raised instead of deciding.
+
+Minor version bump because two behaviours changed: inferred schemas now reject
+unexpected arguments, and an ALLOW is now bound to the exact arguments that were
+checked (mutated or replayed results refuse to run). Both changes are strictly
+in the blocking direction; nothing previously blocked is now allowed.
 
 ### Security
 - **A checked call could be edited before it ran (TOCTOU).** Reported on Reddit by
