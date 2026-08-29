@@ -45,3 +45,4 @@ live_audit.*
 audit.json
 audit.csv
 toolwall/audit.*
+.claude/
