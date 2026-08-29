@@ -110,6 +110,15 @@ Everything that isn't explicitly allowed is blocked. That is the whole idea.
 with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
 ([full report](gate-suite/results/REPORT.md), reproduce with `python gate-suite/run_suite.py`).
 Secret detection is pattern + entropy based and is never 100%; the report states exactly
+
+
+**The verdict covers the call, not the state of the world.** An approved
+`delete_records(id=42)` deletes whatever 42 points to at execution time; if the
+resource was swapped after the check, the receipt still matches because the argument
+never changed. Argument integrity is not resource integrity. For resources that can
+change owner or meaning, re-verify inside the tool's own transaction (for example
+compare-and-swap on a version column); the gate cannot see your datastore, and any
+external authorization layer that claims otherwise is overclaiming.
 what is and is not proven. **Try to break it. Issues and PRs welcome.**
 
 ## Why not just use the guardrails in my agent framework?

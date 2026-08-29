@@ -149,6 +149,13 @@ detection is pattern + entropy based and is **never 100%**. Structureless passwo
 out of scope, and the suite report states exactly what is and is not proven. Every claim
 about toolwall cites that report, nothing broader.
 
+**The verdict covers the call, not the state of the world.** An approved
+`delete_records(id=42)` deletes whatever 42 points to at execution time; if the resource
+was swapped after the check, the receipt still matches because the argument never
+changed. Argument integrity is not resource integrity. For resources that can change
+owner or meaning, re-verify inside the tool's own transaction (for example
+compare-and-swap on a version column); the gate cannot see your datastore.
+
 ## Links
 
 - **Source, full docs, and the failure suite:** https://github.com/Dev-Saif-Ops/toolwall
