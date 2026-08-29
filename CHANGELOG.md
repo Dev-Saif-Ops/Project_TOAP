@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.1] - 2026-08-29
+
+### Security
+- **A third mutation window, found by the same reviewer within the hour.** In 0.4.0
+  the execute-time hash was computed over the live args object and the tool was then
+  invoked with that same live object. After the hash passed, another thread holding
+  the GateResult could still mutate what the tool was reading: the receipt proved
+  the past, not the call. execute() now deep-freezes the arguments, fingerprints the
+  frozen copy, and invokes the tool with that same frozen copy, which is never
+  reachable through the GateResult. A mid-execution mutation of `call.args` no
+  longer touches what the tool sees (threaded regression test per the reviewer's
+  barrier spec).
+- **Single-use enforcement had a race.** Two threads handing in the same approved
+  result could both pass the spent check before either set it. The check-and-set is
+  now atomic under the gate lock; a concurrent double-execute runs the tool exactly
+  once (regression test with a start barrier).
 ## [0.4.0] - 2026-08-29
 
 One externally reported security fix, plus two defects found while writing the

@@ -41,7 +41,7 @@ pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-Currently 152 tests.
+Currently 155 tests.
 
 The attack suite is separate, and it is what every public claim about toolwall
 cites:

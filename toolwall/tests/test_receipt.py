@@ -277,3 +277,84 @@ def test_new_types_cannot_collide_with_their_string_forms():
     # exponent is preserved: numerically equal Decimals may differ, which can only
     # refuse a swap, never admit one
     assert fingerprint("t", {"v": Decimal("10.50")}) != fingerprint("t", {"v": Decimal("10.5")})
+
+
+# --- window 3: after the hash passes, before/while the tool reads the args ------
+
+def test_tool_receives_the_verified_snapshot_not_the_hashed_object():
+    """If the tool is handed the same mutable object that was hashed, the receipt
+    proves the past, not the call. The executed args must not be reachable
+    through the GateResult at all."""
+    seen = {}
+    gate = Gate(default="deny")
+    gate.register(
+        "d", lambda filter: seen.setdefault("obj", filter),
+        schema=ToolSchema(required=["filter"], types={"filter": dict}),
+    )
+    result = gate.check({"name": "d", "args": {"filter": {"id": 1}}})
+    gate.execute(result)
+
+    assert seen["obj"] == {"id": 1}
+    assert seen["obj"] is not result.call.args["filter"]
+
+
+def test_mutation_from_another_thread_during_execution_cannot_reach_the_tool():
+    """deelight_0909's barrier spec: hash passes, another thread mutates
+    GateResult.call.args, barrier releases. The tool must read the frozen
+    verified snapshot."""
+    import threading
+
+    got = {}
+    started = threading.Event()
+    proceed = threading.Event()
+
+    def slow_delete(filter: dict):
+        started.set()
+        assert proceed.wait(timeout=5)
+        got["filter"] = dict(filter)
+        return {"ok": True}
+
+    gate = Gate(default="deny")
+    gate.register(
+        "slow_delete", slow_delete,
+        schema=ToolSchema(required=["filter"], types={"filter": dict}),
+    )
+    result = gate.check({"name": "slow_delete", "args": {"filter": {"id": 42}}})
+
+    t = threading.Thread(target=lambda: gate.execute(result))
+    t.start()
+    assert started.wait(timeout=5)
+    result.call.args["filter"].clear()   # mutate mid-execution
+    proceed.set()
+    t.join(timeout=5)
+
+    assert got["filter"] == {"id": 42}
+
+
+def test_concurrent_execute_of_one_result_runs_the_tool_exactly_once():
+    """Single-use must hold under a race: two threads handing in the same
+    approved result must not both pass the spent check."""
+    import threading
+
+    ran = []
+    barrier = threading.Barrier(2, timeout=5)
+
+    gate = Gate(default="deny")
+    gate.register(
+        "t", lambda x: ran.append(x),
+        schema=ToolSchema(required=["x"], types={"x": int}),
+    )
+    result = gate.check({"name": "t", "args": {"x": 1}})
+
+    def go():
+        barrier.wait()
+        try:
+            gate.execute(result)
+        except PermissionError:
+            pass  # the loser may see an already-blocked result
+
+    threads = [threading.Thread(target=go) for _ in range(2)]
+    for th in threads: th.start()
+    for th in threads: th.join(timeout=5)
+
+    assert len(ran) == 1, f"one verdict must authorise exactly one execution, got {len(ran)}"

@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/toolwall.svg?cacheSeconds=300)](https://pypi.org/project/toolwall/)
 [![Python versions](https://img.shields.io/pypi/pyversions/toolwall.svg)](https://pypi.org/project/toolwall/)
 [![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](toolwall/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-152%20passing-brightgreen.svg)](toolwall/tests)
+[![Tests](https://img.shields.io/badge/tests-155%20passing-brightgreen.svg)](toolwall/tests)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](toolwall/pyproject.toml)
 [![Failure suite](https://img.shields.io/badge/attack%20suite-28%2F28%20blocked-brightgreen.svg)](gate-suite/results/REPORT.md)
 
@@ -11,7 +11,7 @@
 >
 > Your LLM can generate a **valid** tool call. That doesn't mean it's **safe** to execute.
 
-**Status: v0.4.0 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 152 tests · published attack suite.**
+**Status: v0.4.1 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 155 tests · published attack suite.**
 
 ```bash
 pip install toolwall
@@ -213,7 +213,7 @@ Run the tests and the published attack suite yourself:
 
 ```bash
 cd toolwall && pip install -e ".[dev]"
-pytest                                    # 152 tests
+pytest                                    # 155 tests
 python ../gate-suite/run_suite.py         # 28/28 attacks blocked, prints the G1 report
 ```
 

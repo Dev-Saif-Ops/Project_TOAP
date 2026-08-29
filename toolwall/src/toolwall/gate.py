@@ -359,26 +359,22 @@ class Gate:
             joined = "; ".join(result.reasons) or "no call"
             raise PermissionError(f"refusing to execute a {result.verdict.value} result: {joined}")
 
+        execute_args = result.call.args  # unreceipted opt-out runs the live args
+
         # The verdict was about specific arguments. If they are not the arguments we
         # are about to run, the verdict does not apply to this call. Refuse, and do
         # not spend budget on it.
         if result.receipt is not None:
-            # One verdict authorises one execution. Handing the same approved result
-            # back a second time is a different call from the one that was checked,
-            # even though the arguments still match. A retry has to be re-checked,
-            # since the gate's budget and history moved on after the first attempt.
-            if result.receipt_spent:
-                result.verdict = Verdict.BLOCK
-                result.reasons.append(
-                    "receipt already spent; re-check the call instead of replaying "
-                    "an approved result"
-                )
-                result.executed = False
-                return result
+            # Freeze first, then hash the frozen copy, then run the tool on that same
+            # frozen copy. Hashing the live object and then passing the live object
+            # would leave a window after the hash passes in which another thread can
+            # still mutate what the tool reads: the receipt would prove the past, not
+            # the call. The tool must only ever see the snapshot that was verified.
             try:
-                current = fingerprint(result.call.name, result.call.args)
-            except ReceiptError as exc:
-                current = f"unfingerprintable: {exc}"
+                frozen_args = copy.deepcopy(result.call.args)
+                current = fingerprint(result.call.name, frozen_args)
+            except Exception as exc:  # ReceiptError or a failed copy: refuse either way
+                current = f"unverifiable: {exc}"
             if current != result.receipt:
                 result.verdict = Verdict.BLOCK
                 result.reasons.append(
@@ -387,7 +383,27 @@ class Gate:
                 )
                 result.executed = False
                 return result
-            result.receipt_spent = True
+            # One verdict authorises one execution. Check-and-set under the lock, or
+            # two threads handing in the same result both pass the flag and the tool
+            # runs twice on one verdict.
+            with self._lock:
+                if result.receipt_spent:
+                    spent = True
+                else:
+                    result.receipt_spent = True
+                    spent = False
+            if spent:
+                result.verdict = Verdict.BLOCK
+                result.reasons.append(
+                    "receipt already spent; re-check the call instead of replaying "
+                    "an approved result"
+                )
+                result.executed = False
+                return result
+            # The snapshot must never be reachable through the result object, or a
+            # thread holding the result could mutate what the tool is reading. The
+            # result keeps the checked args; the hash just proved the two identical.
+            execute_args = frozen_args
 
         with self._lock:
             self._executed_calls += 1
@@ -412,7 +428,7 @@ class Gate:
             result.error = f"unknown tool at execute time: {result.call.name!r}"
         else:
             try:
-                result.return_value = tool(**result.call.args)
+                result.return_value = tool(**execute_args)
                 result.executed = True
                 self._scan_output(result)
             except Exception as exc:
