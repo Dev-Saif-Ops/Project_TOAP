@@ -3,9 +3,9 @@
 [![PyPI version](https://img.shields.io/pypi/v/toolwall.svg?cacheSeconds=300)](https://pypi.org/project/toolwall/)
 [![Python versions](https://img.shields.io/pypi/pyversions/toolwall.svg)](https://pypi.org/project/toolwall/)
 [![License: MIT](https://img.shields.io/pypi/l/toolwall.svg)](toolwall/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-125%20passing-brightgreen.svg)](toolwall/tests)
+[![Tests](https://img.shields.io/badge/tests-152%20passing-brightgreen.svg)](toolwall/tests)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](toolwall/pyproject.toml)
-[![Failure suite](https://img.shields.io/badge/attack%20suite-25%2F25%20blocked-brightgreen.svg)](gate-suite/results/REPORT.md)
+[![Failure suite](https://img.shields.io/badge/attack%20suite-28%2F28%20blocked-brightgreen.svg)](gate-suite/results/REPORT.md)
 
 > ## The security gateway for AI agent tool calls.
 >
