@@ -8,6 +8,7 @@ from toolwall.gate import Gate, GateResult, ToolRegistry, Verdict
 from toolwall.wall import ToolWall
 from toolwall.intake import IntakeError, ToolCall, parse_tool_calls
 from toolwall.meter import Meter, RunEvent, RunReport, extract_usage
+from toolwall.receipt import ReceiptError, fingerprint
 from toolwall.policy import (
     Policy,
     ends_with,
@@ -50,6 +51,8 @@ __all__ = [
     "schema_from_signature",
     "Shield",
     "Finding",
+    "ReceiptError",
+    "fingerprint",
     "suggest_policies",
     "MCPGuard",
     "GuardedCall",

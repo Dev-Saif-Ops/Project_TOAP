@@ -143,8 +143,8 @@ python examples/live_gemini_agent.py     # set GEMINI_API_KEY first
 
 ## Honest status
 
-`toolwall` is alpha. The published failure suite blocks **25 of 25 attack cases across
-10 classes with 0 false blocks** on clean traffic, at sub-millisecond overhead. Secret
+`toolwall` is alpha. The published failure suite blocks **28 of 28 attack cases across
+11 classes with 0 false blocks** on clean traffic, at sub-millisecond overhead. Secret
 detection is pattern + entropy based and is **never 100%**. Structureless passwords are
 out of scope, and the suite report states exactly what is and is not proven. Every claim
 about toolwall cites that report, nothing broader.

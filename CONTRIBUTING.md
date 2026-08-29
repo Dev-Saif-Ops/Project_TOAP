@@ -41,7 +41,7 @@ pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-Currently 125 tests.
+Currently 149 tests.
 
 The attack suite is separate, and it is what every public claim about toolwall
 cites:
@@ -51,7 +51,7 @@ cd gate-suite
 python run_suite.py
 ```
 
-Currently 25/25 attack cases blocked with zero executions, and every clean case
+Currently 28/28 attack cases blocked with zero executions, and every clean case
 executes. **A change that blocks legitimate traffic fails the suite just as hard
 as one that lets an attack through.** False blocks are the main reason security
 tooling gets removed.

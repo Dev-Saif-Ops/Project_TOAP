@@ -13,6 +13,7 @@ Check order (first failure blocks, fail-closed):
 
 from __future__ import annotations
 
+import copy
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -22,6 +23,7 @@ from typing import Any, Literal
 from toolwall.intake import IntakeError, ToolCall, parse_tool_calls
 from toolwall.meter import Meter, RunEvent
 from toolwall.policy import Policy
+from toolwall.receipt import ReceiptError, fingerprint
 from toolwall.schema import ToolSchema, schema_from_signature
 from toolwall.shield import Finding, Shield
 
@@ -46,6 +48,7 @@ class ToolRegistry:
     _tools: dict[str, ToolFn] = field(default_factory=dict)
     _schemas: dict[str, ToolSchema] = field(default_factory=dict)
     _policies: dict[str, Policy] = field(default_factory=dict)
+    _unreceipted: set[str] = field(default_factory=set)
 
     def register(
         self,
@@ -56,6 +59,7 @@ class ToolRegistry:
         policy: Policy | None = None,
         infer_schema: bool = False,
         replace: bool = False,
+        receipt: bool = True,
     ) -> None:
         """Register a tool. This registry IS the allowlist.
 
@@ -72,7 +76,10 @@ class ToolRegistry:
         # new tool can never inherit constraints written for the previous one.
         self._schemas.pop(name, None)
         self._policies.pop(name, None)
+        self._unreceipted.discard(name)
         self._tools[name] = fn
+        if not receipt:
+            self._unreceipted.add(name)
         if schema is not None:
             self._schemas[name] = schema
         elif infer_schema:
@@ -89,6 +96,9 @@ class ToolRegistry:
     def get_policy(self, name: str) -> Policy | None:
         return self._policies.get(name)
 
+    def wants_receipt(self, name: str) -> bool:
+        return name not in self._unreceipted
+
     def names(self) -> list[str]:
         return list(self._tools.keys())
 
@@ -103,6 +113,8 @@ class GateResult:
     error: str | None = None
     findings: list[Finding] = field(default_factory=list)  # shield hits (value-free)
     dry_run: bool = False  # True when the gate simulated execution
+    receipt: str | None = None  # fingerprint of (tool name, args) bound at check time
+    receipt_spent: bool = False  # one verdict authorises one execution, not a stream
 
     @property
     def allowed(self) -> bool:
@@ -168,9 +180,11 @@ class Gate:
         policy: Policy | None = None,
         infer_schema: bool = False,
         replace: bool = False,
+        receipt: bool = True,
     ) -> None:
         self.registry.register(
-            name, fn, schema, policy=policy, infer_schema=infer_schema, replace=replace
+            name, fn, schema, policy=policy, infer_schema=infer_schema,
+            replace=replace, receipt=receipt,
         )
 
     # -- budget ---------------------------------------------------------------
@@ -260,6 +274,16 @@ class Gate:
         return results[0]
 
     def _check_one(self, call: ToolCall) -> GateResult:
+        # Take our own copy before anything is validated. The caller still holds a
+        # reference to the dict it handed in, and without this it could edit the
+        # arguments after the verdict and before execution.
+        try:
+            call.args = copy.deepcopy(call.args)
+        except Exception:
+            # Uncopyable arguments are left as-is; the receipt below is then the
+            # only thing standing between check and execute, and it is required.
+            pass
+
         if self.registry.get(call.name) is None:
             return self._record(GateResult(Verdict.BLOCK, call, [f"unknown tool: {call.name!r}"]))
 
@@ -302,6 +326,17 @@ class Gate:
                         GateResult(Verdict.BLOCK, call, reasons, findings=findings)
                     )
 
+        # Bind the receipt last, over the arguments as they will be executed
+        # (the shield may have redacted them above).
+        try:
+            receipt = fingerprint(call.name, call.args)
+        except ReceiptError as exc:
+            if self.registry.wants_receipt(call.name):
+                return self._record(
+                    GateResult(Verdict.BLOCK, call, [f"cannot bind receipt: {exc}"])
+                )
+            receipt = None
+
         if policy is not None and policy.require_approval:
             return self._record(
                 GateResult(
@@ -309,10 +344,13 @@ class Gate:
                     call,
                     [f"approval required for {call.name!r}"],
                     findings=findings,
+                    receipt=receipt,
                 )
             )
 
-        return self._record(GateResult(Verdict.ALLOW, call, findings=findings))
+        return self._record(
+            GateResult(Verdict.ALLOW, call, findings=findings, receipt=receipt)
+        )
 
     # -- execution ----------------------------------------------------------------
 
@@ -320,6 +358,37 @@ class Gate:
         if not result.allowed or result.call is None:
             joined = "; ".join(result.reasons) or "no call"
             raise PermissionError(f"refusing to execute a {result.verdict.value} result: {joined}")
+
+        # The verdict was about specific arguments. If they are not the arguments we
+        # are about to run, the verdict does not apply to this call. Refuse, and do
+        # not spend budget on it.
+        if result.receipt is not None:
+            # One verdict authorises one execution. Handing the same approved result
+            # back a second time is a different call from the one that was checked,
+            # even though the arguments still match. A retry has to be re-checked,
+            # since the gate's budget and history moved on after the first attempt.
+            if result.receipt_spent:
+                result.verdict = Verdict.BLOCK
+                result.reasons.append(
+                    "receipt already spent; re-check the call instead of replaying "
+                    "an approved result"
+                )
+                result.executed = False
+                return result
+            try:
+                current = fingerprint(result.call.name, result.call.args)
+            except ReceiptError as exc:
+                current = f"unfingerprintable: {exc}"
+            if current != result.receipt:
+                result.verdict = Verdict.BLOCK
+                result.reasons.append(
+                    "arguments changed between check and execute; refusing to run "
+                    "a call the gate did not approve"
+                )
+                result.executed = False
+                return result
+            result.receipt_spent = True
+
         with self._lock:
             self._executed_calls += 1
             self._executed_per_tool[result.call.name] = (

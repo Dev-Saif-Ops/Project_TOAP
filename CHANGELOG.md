@@ -2,9 +2,35 @@
 
 ## [Unreleased]
 
-Both items below came out of writing the onboarding docs: the path a first-time
-user actually walks turned out to hit two places where the gate raised instead of
-deciding.
+One externally reported security fix, plus two defects found while writing the
+onboarding docs: walking the path a first-time user actually takes turned up two
+places where the gate raised instead of deciding.
+
+### Security
+- **A checked call could be edited before it ran (TOCTOU).** Reported on Reddit by
+  u/deelight_0909, reproduced on two separate paths before fixing. The gate returned
+  ALLOW for a specific set of arguments and then executed whatever the arguments
+  happened to be at execution time. The caller still held a reference to the dict it
+  passed in, so it could widen a `delete_records` filter to `{}` after the verdict;
+  separately, an approval handler is given the `GateResult` itself and could rewrite
+  `call.args` in the same window. The core invariant (a non-ALLOW verdict never runs
+  the tool) always held, but the matching promise, that an ALLOW runs the call that
+  was actually checked, did not.
+
+  Two changes, because either one alone leaves a window open:
+  - The gate now deep-copies arguments at check time, so it owns what it validated
+    and the caller's reference no longer reaches the tool.
+  - `check()` binds a receipt: a SHA-256 fingerprint over the tool name and a
+    canonical form of the arguments. `execute()` recomputes it and refuses to run on
+    a mismatch, without spending budget. The snapshot alone would not close the
+    approval window, since there the gate's own copy is what gets mutated.
+
+  Arguments that cannot be canonicalised now BLOCK by default, because running them
+  unchecked would leave exactly the strangest calls unprotected. Register with
+  `receipt=False` to opt a tool out explicitly and accept that its arguments are not
+  tamper-checked; a `replace=True` re-registration clears any previous opt-out.
+
+  `gate-suite` grew an eleventh class, `toctou`: **28/28 blocked, 0 false blocks.**
 
 ### Fixed
 - **A wrong budget type crashed the gate instead of failing at configuration.**
@@ -29,7 +55,7 @@ deciding.
 - `ToolSchema.optional`: known-but-not-required argument names. Only consulted
   when `allow_extra=False`, so an optional parameter with no type annotation (and
   therefore absent from `types`) is not mistaken for an unexpected argument.
-- Tests grown to 130.
+- Tests grown to 149.
 
 ## [0.3.2] - 2026-08-29
 

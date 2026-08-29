@@ -11,7 +11,7 @@
 >
 > Your LLM can generate a **valid** tool call. That doesn't mean it's **safe** to execute.
 
-**Status: v0.3.2 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 125 tests · published attack suite.**
+**Status: v0.3.2 (alpha) · [on PyPI](https://pypi.org/project/toolwall/) · 149 tests · published attack suite.**
 
 ```bash
 pip install toolwall
@@ -106,7 +106,7 @@ Everything that isn't explicitly allowed is blocked. That is the whole idea.
 - **Audit trail**: every verdict exported to JSON/CSV.
 - **Zero required dependencies**: stdlib only, Python 3.10+.
 
-**Proof, not promises:** the published suite blocks **25/25 attack cases across 10 classes
+**Proof, not promises:** the published suite blocks **28/28 attack cases across 11 classes
 with 0 false blocks** on clean traffic, at p95 0.07 ms overhead
 ([full report](gate-suite/results/REPORT.md), reproduce with `python gate-suite/run_suite.py`).
 Secret detection is pattern + entropy based and is never 100%; the report states exactly
@@ -213,8 +213,8 @@ Run the tests and the published attack suite yourself:
 
 ```bash
 cd toolwall && pip install -e ".[dev]"
-pytest                                    # 125 tests
-python ../gate-suite/run_suite.py         # 25/25 attacks blocked, prints the G1 report
+pytest                                    # 149 tests
+python ../gate-suite/run_suite.py         # 28/28 attacks blocked, prints the G1 report
 ```
 
 ## Roadmap (Phase 0 → 1)
@@ -223,7 +223,7 @@ python ../gate-suite/run_suite.py         # 25/25 attacks blocked, prints the G1
 - [x] Fail-closed gate + schema layer + audit meter
 - [x] Policy engine: value constraints, cross-arg rules, approval flags, budget caps
 - [x] Shield: secret detection/redaction on tool args and text (registration is the allowlist)
-- [x] Failure-scenario suite: 25 attacks across 10 classes, report published per release
+- [x] Failure-scenario suite: 28 attacks across 11 classes, report published per release
 - [x] Dry-run mode: full agent run, zero execution, `gate.report()` "would-have-done" summary
 - [x] Suggested-policy generator: observed calls -> reviewable draft schema + policy
 - [x] `toolwall-mcp`: `MCPGuard` puts the gate in front of any MCP server (tested core; stdio wiring lands with first pilot)

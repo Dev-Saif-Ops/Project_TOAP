@@ -41,9 +41,21 @@ def run_case(case: dict) -> dict:
     latencies: list[float] = []
     steps: list[dict] = []
 
+    mutate = case.get("mutate")
+
     for _ in range(repeat):
         start = time.perf_counter()
-        results = gate.run_all(case["payload"])
+        if mutate is None:
+            results = gate.run_all(case["payload"])
+        else:
+            # Time-of-check to time-of-use: split the gate, edit the arguments in the
+            # window, then execute. The gate must refuse to run a call it did not
+            # approve, so a case like this counts as executed only if the tool ran.
+            results = gate.check_all(case["payload"])
+            for r in results:
+                if r.call is not None:
+                    mutate(r.call.args)
+            results = [gate.execute(r) if r.allowed else r for r in results]
         latencies.append((time.perf_counter() - start) * 1000)
         for r in results:
             steps.append({
