@@ -46,3 +46,4 @@ audit.json
 audit.csv
 toolwall/audit.*
 .claude/
+CONVERSATIONS.md
